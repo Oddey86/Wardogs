@@ -284,7 +284,7 @@
   </main>
 
   <dialog id="confirmDialog">
-    <div class="dialog-body"><h3 id="dialogTitle">Er du sikker?</h3><p id="dialogText"></p></div>
+    <div class="dialog-body"><h3 id="dialogTitle">Are you sure?</h3><p id="dialogText"></p></div>
     <div class="dialog-actions"><button id="dialogCancel" class="btn" type="button">Cancel</button><button id="dialogConfirm" class="btn danger" type="button">Bekreft</button></div>
   </dialog>
 
@@ -538,7 +538,7 @@
             const gain = snapshot.gains?.[role.id];
             const detail = baseline ? 'saved baseline' : gain == null ? 'no gain calculated' : `+${nf.format(gain)} this round`;
             return `<td class="${savedXp != null ? 'saved-xp' : 'baseline'}">${savedXp == null ? '—' : nf.format(savedXp) + ' XP<small>' + detail + '</small>'}</td>`;
-          }).join('')}<td class="${baseline ? 'baseline' : 'gain'}">${baseline ? '—' : '+' + nf.format(snapshot.totalGain || 0) + ' XP<small>+' + nf.format(snapshot.stepTotal || 0) + ' since last reading</small>'}</td><td><button class="btn small" type="button" data-edit-id="${snapshot.id}">Korriger</button></td></tr>`;
+          }).join('')}<td class="${baseline ? 'baseline' : 'gain'}">${baseline ? '—' : '+' + nf.format(snapshot.totalGain || 0) + ' XP<small>+' + nf.format(snapshot.stepTotal || 0) + ' since last reading</small>'}</td><td><button class="btn small" type="button" data-edit-id="${snapshot.id}">Edit</button></td></tr>`;
         }).join('')}</tbody></table>`;
       }
 
@@ -581,7 +581,7 @@
           const stepDeltas = snapshotDeltas(snapshot, previousReading || baseline);
           const invalidRoles = ROLES.filter(role => deltas[role.id].warning || stepDeltas[role.id].warning);
           if (invalidRoles.length) {
-            return { ok: false, message: `This change causes Current XP to decrease for ${invalidRoles.map(role => role.name).join(', ')}. Review denne og de neste avlesningene.` };
+            return { ok: false, message: `This change causes Current XP to decrease for ${invalidRoles.map(role => role.name).join(', ')}. Check this and subsequent readings.` };
           }
           snapshot.gains = Object.fromEntries(ROLES.map(role => [role.id, deltas[role.id].value]));
           snapshot.stepGains = Object.fromEntries(ROLES.map(role => [role.id, stepDeltas[role.id].value]));
@@ -867,7 +867,7 @@
 
       async function readXp() {
         if (!image) return;
-        if (!window.Tesseract) return setNotice('OCR-biblioteket kunne ikke lastes. Sjekk internettilkoblingen, eller skriv inn tallene manuelt.', 'error');
+        if (!window.Tesseract) return setNotice('The OCR library could not load. Check your internet connection or enter the values manually.', 'error');
         els.read.disabled = true;
         els.progress.classList.add('visible');
         setProgress(2, 'Preparing text recognition…');
@@ -975,7 +975,7 @@
       function csvEscape(value) { const s = String(value ?? ''); return /[";,\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }
 
       function exportCsv() {
-        const rows = [['Session', 'Timestamp', 'Round', 'Status', ...ROLES.flatMap(r => [`${r.name} level`, `${r.name} XP`, `${r.name} gain`]), 'Roundgain', 'Since last reading']];
+        const rows = [['Session', 'Timestamp', 'Round', 'Status', ...ROLES.flatMap(r => [`${r.name} level`, `${r.name} XP`, `${r.name} gain`]), 'Round gain', 'Since last reading']];
         state.sessions.forEach(session => {
           state.snapshots.filter(s => s.sessionId === session.id).forEach(snapshot => {
             const status = snapshot.kind === 'baseline' ? 'Baseline' : snapshot.kind === 'round' ? 'Completed' : 'Reading';
@@ -1006,7 +1006,7 @@
           persist();
           renderFields(sessionSnapshots().at(-1)?.values || emptyValues());
           renderAll();
-          setNotice('Backupen er importert.', 'good');
+          setNotice('Backup imported successfully.', 'good');
         } catch (_) { setNotice('This file is not a valid XP Tracker backup.', 'error'); }
         els.import.value = '';
       }
