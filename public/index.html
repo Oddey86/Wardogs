@@ -1,1 +1,1058 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d0f">
+  <title>Battlefield XP Tracker</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080a0c;
+      --panel: #111519;
+      --panel-2: #171c21;
+      --line: #2a3239;
+      --text: #f1f4f6;
+      --muted: #929ca4;
+      --accent: #f4cc62;
+      --accent-2: #db9f2d;
+      --good: #70d69a;
+      --bad: #ff7b72;
+      --radius: 14px;
+    }
 
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(244, 204, 98, .08), transparent 28rem),
+        linear-gradient(135deg, rgba(255,255,255,.018) 25%, transparent 25%) 0 0 / 24px 24px,
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .app { width: min(1220px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 56px; }
+
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--accent);
+      font-size: .74rem;
+      font-weight: 800;
+      letter-spacing: .19em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0; font-size: clamp(2rem, 5vw, 4.1rem); line-height: .98; letter-spacing: -.055em; }
+    header p:last-child { margin: 10px 0 0; color: var(--muted); max-width: 620px; }
+
+    .session-pill {
+      min-width: 240px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(17,21,25,.8);
+    }
+
+    .session-pill label { display: block; color: var(--muted); font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+    .session-pill input { width: 100%; margin-top: 5px; padding: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-weight: 750; }
+
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    .metric, .panel { border: 1px solid var(--line); background: linear-gradient(145deg, rgba(24,29,34,.98), rgba(13,16,19,.98)); box-shadow: 0 14px 40px rgba(0,0,0,.18); }
+    .metric { position: relative; min-height: 118px; padding: 20px; border-radius: var(--radius); overflow: hidden; }
+    .metric::after { content: ""; position: absolute; right: -35px; bottom: -60px; width: 120px; height: 120px; border: 20px solid rgba(244,204,98,.04); border-radius: 50%; }
+    .metric span { color: var(--muted); font-size: .73rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+    .metric strong { display: block; margin-top: 13px; font-size: clamp(1.6rem, 3vw, 2.45rem); line-height: 1; font-variant-numeric: tabular-nums; }
+    .metric:first-child strong { color: var(--accent); }
+
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr); gap: 18px; align-items: start; }
+    .panel { border-radius: var(--radius); overflow: hidden; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .panel-head h2 { margin: 0; font-size: 1rem; letter-spacing: -.01em; }
+    .panel-head small { color: var(--muted); }
+    .panel-body { padding: 20px; }
+
+    .dropzone {
+      display: grid;
+      place-items: center;
+      min-height: 190px;
+      padding: 26px;
+      border: 1px dashed #4a555e;
+      border-radius: 12px;
+      background: rgba(255,255,255,.018);
+      text-align: center;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+    .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: rgba(244,204,98,.05); transform: translateY(-1px); }
+    .upload-icon { width: 48px; height: 48px; margin-bottom: 13px; color: var(--accent); }
+    .dropzone strong { display: block; font-size: 1.05rem; }
+    .dropzone span { display: block; margin-top: 6px; color: var(--muted); font-size: .86rem; }
+
+    .preview-wrap { display: none; }
+    .preview-wrap.visible { display: block; }
+    .canvas-shell { position: relative; width: 100%; background: #050607; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; touch-action: none; }
+    #previewCanvas { display: block; width: 100%; height: auto; cursor: crosshair; }
+    .preview-help { margin: 10px 0 0; color: var(--muted); font-size: .8rem; line-height: 1.45; }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 15px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #1b2126;
+      font-weight: 750;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+    .btn:hover { border-color: #56616a; background: #222a30; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn.primary { border-color: #ffe08b; background: var(--accent); color: #15110a; }
+    .btn.primary:hover { background: #ffe08b; }
+    .btn.round { border-color: rgba(244,204,98,.55); background: rgba(244,204,98,.08); color: var(--accent); }
+    .btn.round:hover { border-color: var(--accent); background: rgba(244,204,98,.14); }
+    .btn.ghost { background: transparent; }
+    .btn.danger { border-color: rgba(255,123,114,.32); color: #ffaaa4; background: rgba(255,123,114,.06); }
+
+    .progress { display: none; margin-top: 14px; }
+    .progress.visible { display: block; }
+    .progress-line { height: 7px; overflow: hidden; border-radius: 999px; background: #242b31; }
+    .progress-line i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .2s; }
+    .progress p { margin: 8px 0 0; color: var(--muted); font-size: .8rem; }
+
+    .classes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .class-card { padding: 14px; border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.018); }
+    .class-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 11px; }
+    .class-title strong { font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
+    .class-title span { color: var(--accent); font-size: .72rem; font-weight: 800; }
+    .fields { display: grid; grid-template-columns: .58fr 1fr; gap: 7px; }
+    .field label { display: block; margin: 0 0 5px; color: var(--muted); font-size: .65rem; font-weight: 750; text-transform: uppercase; }
+    .field input { width: 100%; min-width: 0; padding: 9px 8px; border: 1px solid #303941; border-radius: 7px; outline: none; background: #0c0f12; color: var(--text); font-variant-numeric: tabular-nums; }
+    .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(244,204,98,.09); }
+
+    .save-row { display: flex; gap: 10px; margin-top: 14px; }
+    .save-row .btn { flex: 1; }
+    .round-live { color: var(--accent); font-weight: 800; }
+    .round-done { color: var(--good); font-weight: 800; }
+    .notice { min-height: 1.3em; margin: 10px 0 0; color: var(--muted); font-size: .8rem; }
+    .notice.warn { color: #ffd37d; }
+    .notice.error { color: var(--bad); }
+    .notice.good { color: var(--good); }
+
+    .history-panel { margin-top: 18px; }
+    .history-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+    .history-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+    th { padding: 11px 14px; color: var(--muted); font-size: .67rem; letter-spacing: .08em; text-align: right; text-transform: uppercase; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    td { padding: 13px 14px; text-align: right; border-bottom: 1px solid rgba(42,50,57,.7); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    tr:last-child td { border-bottom: 0; }
+    .gain { color: var(--good); font-weight: 800; }
+    .gain small { display: block; margin-top: 3px; color: var(--muted); font-size: .68rem; font-weight: 600; }
+    .saved-xp { color: var(--text); font-weight: 800; }
+    .saved-xp small { display: block; margin-top: 3px; color: var(--good); font-size: .68rem; font-weight: 700; }
+    .baseline { color: var(--muted); }
+    .empty { padding: 36px 20px; color: var(--muted); text-align: center; }
+    .btn.small { min-height: 32px; padding: 6px 10px; font-size: .75rem; }
+
+    dialog { width: min(480px, calc(100% - 28px)); padding: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text); box-shadow: 0 28px 90px rgba(0,0,0,.68); }
+    dialog.edit-dialog { width: min(760px, calc(100% - 28px)); }
+    dialog::backdrop { background: rgba(0,0,0,.7); backdrop-filter: blur(3px); }
+    .dialog-body { padding: 22px; }
+    .dialog-body h3 { margin: 0 0 8px; }
+    .dialog-body p { margin: 0; color: var(--muted); line-height: 1.55; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 9px; padding: 15px 22px; border-top: 1px solid var(--line); }
+
+    @media (max-width: 900px) {
+      header { align-items: stretch; flex-direction: column; }
+      .session-pill { min-width: 0; }
+      .summary { grid-template-columns: repeat(2, 1fr); }
+      .workspace { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 540px) {
+      .app { width: min(100% - 20px, 1220px); padding-top: 20px; }
+      .summary { gap: 8px; }
+      .metric { min-height: 98px; padding: 15px; }
+      .classes { grid-template-columns: 1fr; }
+      .panel-body { padding: 14px; }
+      .panel-head { align-items: flex-start; flex-direction: column; padding: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <p class="eyebrow">Runde for runde</p>
+        <h1>XP Tracker</h1>
+        <p>Les av klassestatistikk fra skjermbilder, kontroller tallene og behold all fremgang lokalt i nettleseren.</p>
+      </div>
+      <div class="session-pill">
+        <label for="sessionName">Aktiv økt</label>
+        <input id="sessionName" maxlength="50" value="Kveldens økt" aria-label="Navn på aktiv økt">
+      </div>
+    </header>
+
+    <section class="summary" aria-label="Oppsummering">
+      <article class="metric"><span id="currentRoundLabel">Runde 1 · live</span><strong id="currentGain">0 XP</strong></article>
+      <article class="metric"><span>Siden forrige avlesning</span><strong id="readingGain">0 XP</strong></article>
+      <article class="metric"><span>Denne økten</span><strong id="sessionGain">0 XP</strong></article>
+      <article class="metric"><span>Ferdige runder</span><strong id="roundCount">0</strong></article>
+    </section>
+
+    <section class="workspace">
+      <article class="panel">
+        <div class="panel-head">
+          <div><h2>1. Legg inn skjermbilde</h2><small>Lim inn, dra inn eller velg en bildefil</small></div>
+        </div>
+        <div class="panel-body">
+          <input id="fileInput" type="file" accept="image/*" hidden>
+          <div id="dropzone" class="dropzone" role="button" tabindex="0" aria-label="Velg skjermbilde">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
+            <div><strong>Slipp skjermbildet her</strong><span>eller klikk for å velge · Ctrl+V fungerer også</span></div>
+          </div>
+
+          <div id="previewWrap" class="preview-wrap">
+            <div class="canvas-shell"><canvas id="previewCanvas"></canvas></div>
+            <p class="preview-help">Dra en ramme rundt selve XP-panelet dersom skjermbildet inneholder mer enn statistikken. La hele bildet være markert når bildet allerede er beskåret.</p>
+            <div class="toolbar">
+              <button id="readButton" class="btn primary" type="button">Les av XP</button>
+              <button id="resetCropButton" class="btn" type="button">Bruk hele bildet</button>
+              <button id="changeImageButton" class="btn ghost" type="button">Bytt bilde</button>
+            </div>
+            <div id="progress" class="progress" aria-live="polite">
+              <div class="progress-line"><i id="progressBar"></i></div>
+              <p id="progressText">Klargjør tekstgjenkjenning…</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div><h2>2. Kontroller og lagre</h2><small id="roundStatus">Runde 1 venter på startverdi</small></div>
+        </div>
+        <div class="panel-body">
+          <div id="classFields" class="classes"></div>
+          <div class="save-row">
+            <button id="saveButton" class="btn primary" type="button">Lagre avlesning</button>
+            <button id="finishRoundButton" class="btn round" type="button">Ny runde</button>
+          </div>
+          <p id="notice" class="notice" aria-live="polite">Første avlesning blir startverdien. Du kan deretter oppdatere flere ganger før du trykker Ny runde.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel history-panel">
+      <div class="panel-head">
+        <div><h2>Historikk</h2><small id="historySubtitle">Ingen avlesninger lagret ennå</small></div>
+        <div class="history-tools">
+          <button id="newSessionButton" class="btn" type="button">Ny økt</button>
+          <button id="exportButton" class="btn" type="button">Eksporter CSV</button>
+          <button id="backupButton" class="btn" type="button">Sikkerhetskopi</button>
+          <label class="btn" for="importInput">Importer</label>
+          <input id="importInput" type="file" accept="application/json,.json" hidden>
+          <button id="clearButton" class="btn danger" type="button">Slett alt</button>
+        </div>
+      </div>
+      <div id="historyContent" class="history-scroll"></div>
+    </section>
+  </main>
+
+  <dialog id="confirmDialog">
+    <div class="dialog-body"><h3 id="dialogTitle">Er du sikker?</h3><p id="dialogText"></p></div>
+    <div class="dialog-actions"><button id="dialogCancel" class="btn" type="button">Avbryt</button><button id="dialogConfirm" class="btn danger" type="button">Bekreft</button></div>
+  </dialog>
+
+  <dialog id="editDialog" class="edit-dialog">
+    <div class="dialog-body">
+      <h3>Korriger avlesning</h3>
+      <p id="editDescription">Endre feil avleste verdier. Senere avlesninger og rundesummer beregnes på nytt automatisk.</p>
+      <div id="editFields" class="classes" style="margin-top:18px"></div>
+      <p id="editNotice" class="notice" aria-live="polite"></p>
+    </div>
+    <div class="dialog-actions"><button id="editCancel" class="btn" type="button">Avbryt</button><button id="editSave" class="btn primary" type="button">Lagre korrigering</button></div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+  <script>
+    (() => {
+      'use strict';
+
+      const ROLES = [
+        { id: 'assault', name: 'Assault', x: .419, row: 0 },
+        { id: 'medic', name: 'Medic', x: .662, row: 0 },
+        { id: 'support', name: 'Support', x: .904, row: 0 },
+        { id: 'recon', name: 'Recon', x: .419, row: 1 },
+        { id: 'driver', name: 'Driver', x: .662, row: 1 },
+        { id: 'pilot', name: 'Pilot', x: .904, row: 1 }
+      ];
+      const STORAGE_KEY = 'battlefield-xp-tracker-v1';
+      const nf = new Intl.NumberFormat('nb-NO');
+      const df = new Intl.DateTimeFormat('nb-NO', { dateStyle: 'short', timeStyle: 'short' });
+
+      const $ = (selector) => document.querySelector(selector);
+      const els = {
+        file: $('#fileInput'), dropzone: $('#dropzone'), previewWrap: $('#previewWrap'), canvas: $('#previewCanvas'),
+        read: $('#readButton'), resetCrop: $('#resetCropButton'), changeImage: $('#changeImageButton'),
+        progress: $('#progress'), progressBar: $('#progressBar'), progressText: $('#progressText'), fields: $('#classFields'),
+        save: $('#saveButton'), finishRound: $('#finishRoundButton'), newSession: $('#newSessionButton'), notice: $('#notice'), sessionName: $('#sessionName'),
+        currentGain: $('#currentGain'), currentRoundLabel: $('#currentRoundLabel'), roundStatus: $('#roundStatus'),
+        readingGain: $('#readingGain'), sessionGain: $('#sessionGain'), roundCount: $('#roundCount'),
+        history: $('#historyContent'), historySubtitle: $('#historySubtitle'), export: $('#exportButton'), backup: $('#backupButton'),
+        import: $('#importInput'), clear: $('#clearButton'), dialog: $('#confirmDialog'), dialogTitle: $('#dialogTitle'),
+        dialogText: $('#dialogText'), dialogCancel: $('#dialogCancel'), dialogConfirm: $('#dialogConfirm'),
+        editDialog: $('#editDialog'), editFields: $('#editFields'), editDescription: $('#editDescription'), editNotice: $('#editNotice'),
+        editCancel: $('#editCancel'), editSave: $('#editSave')
+      };
+
+      let state = loadState();
+      let image = null;
+      let crop = null;
+      let drawing = false;
+      let drawStart = null;
+      let confirmAction = null;
+      let editingSnapshotId = null;
+
+      function emptyValues() {
+        return Object.fromEntries(ROLES.map(role => [role.id, { level: '', current: '' }]));
+      }
+
+      function defaultState() {
+        const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+        return { version: 2, activeSessionId: id, sessions: [{ id, name: 'Kveldens økt', createdAt: new Date().toISOString(), completedRounds: 0, roundBaselineId: null }], snapshots: [] };
+      }
+
+      function loadState() {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          if (parsed && Array.isArray(parsed.sessions) && Array.isArray(parsed.snapshots)) return normalizeState(parsed);
+        } catch (_) {}
+        return defaultState();
+      }
+
+      function normalizeState(parsed) {
+        parsed.version = 2;
+        parsed.sessions.forEach(session => {
+          const snapshots = parsed.snapshots.filter(snapshot => snapshot.sessionId === session.id);
+          if (snapshots.length && snapshots.some(snapshot => !snapshot.kind)) {
+            snapshots.forEach((snapshot, index) => {
+              snapshot.kind = index === 0 ? 'baseline' : 'round';
+              snapshot.finalized = true;
+              snapshot.roundNumber = index;
+            });
+            session.completedRounds = Math.max(0, snapshots.length - 1);
+            session.roundBaselineId = snapshots.at(-1).id;
+          } else {
+            session.completedRounds = Number.isInteger(session.completedRounds) ? session.completedRounds : snapshots.filter(snapshot => snapshot.kind === 'round').length;
+            if (!session.roundBaselineId) session.roundBaselineId = [...snapshots].reverse().find(snapshot => snapshot.kind === 'round' || snapshot.kind === 'baseline')?.id || null;
+          }
+          snapshots.forEach(snapshot => {
+            if (snapshot.stepTotal == null) snapshot.stepTotal = snapshot.kind === 'baseline' ? 0 : Number(snapshot.totalGain) || 0;
+            if (!snapshot.stepGains) snapshot.stepGains = snapshot.gains || Object.fromEntries(ROLES.map(role => [role.id, null]));
+          });
+        });
+        if (!parsed.sessions.some(session => session.id === parsed.activeSessionId)) parsed.activeSessionId = parsed.sessions.at(-1)?.id;
+        return parsed;
+      }
+
+      function persist() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function renderFields(values = emptyValues()) {
+        els.fields.innerHTML = ROLES.map(role => {
+          const v = values[role.id] || {};
+          return `<section class="class-card">
+            <div class="class-title"><strong>${role.name}</strong><span id="gain-${role.id}">—</span></div>
+            <div class="fields">
+              <div class="field"><label for="level-${role.id}">Nivå</label><input id="level-${role.id}" inputmode="numeric" value="${safeValue(v.level)}" placeholder="0"></div>
+              <div class="field"><label for="current-${role.id}">Nå XP</label><input id="current-${role.id}" inputmode="numeric" value="${safeValue(v.current)}" placeholder="0"></div>
+            </div>
+          </section>`;
+        }).join('');
+        els.fields.querySelectorAll('input').forEach(input => input.addEventListener('input', updatePreviewGains));
+        updatePreviewGains();
+      }
+
+      function safeValue(value) {
+        return String(value ?? '').replace(/[^0-9]/g, '');
+      }
+
+      function getFormValues() {
+        return Object.fromEntries(ROLES.map(role => [role.id, {
+          level: numberOrNull($(`#level-${role.id}`).value),
+          current: numberOrNull($(`#current-${role.id}`).value)
+        }]));
+      }
+
+      function numberOrNull(value) {
+        const clean = String(value ?? '').replace(/\D/g, '');
+        return clean === '' ? null : Number(clean);
+      }
+
+      function currentSession() { return state.sessions.find(s => s.id === state.activeSessionId) || state.sessions.at(-1); }
+      function sessionSnapshots() { return state.snapshots.filter(s => s.sessionId === state.activeSessionId); }
+      function roundBaseline() {
+        const session = currentSession();
+        return state.snapshots.find(snapshot => snapshot.id === session?.roundBaselineId) || sessionSnapshots().find(snapshot => snapshot.kind === 'baseline') || null;
+      }
+      function currentRoundReading() {
+        const session = currentSession();
+        return [...sessionSnapshots()].reverse().find(snapshot => snapshot.kind === 'reading' && snapshot.roundNumber === (session?.completedRounds || 0) + 1) || null;
+      }
+
+      function calculateDelta(previous, next) {
+        if (!previous || previous.current == null || next.current == null) return { value: null, warning: '' };
+        if (next.current >= previous.current) return { value: next.current - previous.current, warning: '' };
+        return { value: null, warning: 'Nå XP kan ikke gå ned; kontroller avlesningen.' };
+      }
+
+      function snapshotDeltas(snapshot, previous) {
+        return Object.fromEntries(ROLES.map(role => [role.id, calculateDelta(previous?.values?.[role.id], snapshot.values[role.id])]));
+      }
+
+      function updatePreviewGains() {
+        const previous = roundBaseline();
+        const values = getFormValues();
+        ROLES.forEach(role => {
+          const delta = calculateDelta(previous?.values?.[role.id], values[role.id]);
+          const el = $(`#gain-${role.id}`);
+          if (!previous) el.textContent = 'Startverdi';
+          else if (delta.value == null) el.textContent = 'Kontroller';
+          else el.textContent = `+${nf.format(delta.value)} XP`;
+        });
+      }
+
+      function saveSnapshot() {
+        const values = getFormValues();
+        const filled = ROLES.filter(role => values[role.id].current != null);
+        if (!filled.length) return setNotice('Fyll inn minst én Nå XP-verdi før du lagrer.', 'error');
+
+        const session = currentSession();
+        const previous = roundBaseline();
+        const previousReading = currentRoundReading() || previous;
+        const candidate = {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+          sessionId: state.activeSessionId,
+          createdAt: new Date().toISOString(),
+          values,
+          kind: previous ? 'reading' : 'baseline',
+          finalized: !previous,
+          roundNumber: previous ? session.completedRounds + 1 : 0
+        };
+        const deltas = snapshotDeltas(candidate, previous);
+        const stepDeltas = snapshotDeltas(candidate, previousReading);
+        const warnings = [...Object.values(deltas), ...Object.values(stepDeltas)].filter(d => d.warning).map(d => d.warning);
+        if (warnings.length) return setNotice('Nå XP kan ikke være lavere enn forrige avlesning. Kontroller tallene før du lagrer.', 'error');
+        candidate.gains = Object.fromEntries(ROLES.map(role => [role.id, deltas[role.id].value]));
+        candidate.stepGains = Object.fromEntries(ROLES.map(role => [role.id, stepDeltas[role.id].value]));
+        candidate.totalGain = previous ? Object.values(candidate.gains).reduce((sum, value) => sum + (value || 0), 0) : 0;
+        candidate.stepTotal = previous ? Object.values(candidate.stepGains).reduce((sum, value) => sum + (value || 0), 0) : 0;
+        state.snapshots.push(candidate);
+        if (!previous) session.roundBaselineId = candidate.id;
+        persist();
+        renderAll();
+        setNotice(previous ? `Siden forrige avlesning: +${nf.format(candidate.stepTotal)} XP. Runde ${candidate.roundNumber} totalt: +${nf.format(candidate.totalGain)} XP. Trykk Ny runde når du er ferdig.` : 'Startverdien er lagret. Runde 1 er nå i gang.', 'good');
+      }
+
+      function finishRound() {
+        const session = currentSession();
+        const baseline = roundBaseline();
+        if (!baseline) return setNotice('Lagre en startavlesning før du starter den første runden.', 'error');
+        const reading = currentRoundReading();
+        if (!reading) return setNotice(`Lagre minst én ny avlesning i runde ${session.completedRounds + 1} før du går videre.`, 'error');
+        reading.kind = 'round';
+        reading.finalized = true;
+        session.completedRounds = reading.roundNumber;
+        session.roundBaselineId = reading.id;
+        persist();
+        renderFields(reading.values);
+        renderAll();
+        setNotice(`Runde ${reading.roundNumber} ble avsluttet med +${nf.format(reading.totalGain)} XP. Runde ${reading.roundNumber + 1} starter på 0 XP.`, 'good');
+      }
+
+      function renderAll() {
+        const session = currentSession();
+        if (session) els.sessionName.value = session.name;
+        renderSummary();
+        renderHistory();
+        updatePreviewGains();
+      }
+
+      function renderSummary() {
+        const session = currentSession();
+        const finished = sessionSnapshots().filter(snapshot => snapshot.kind === 'round');
+        const current = currentRoundReading();
+        const completedTotal = finished.reduce((sum, snapshot) => sum + (Number(snapshot.totalGain) || 0), 0);
+        const currentTotal = Number(current?.totalGain) || 0;
+        const roundNumber = (session?.completedRounds || 0) + 1;
+        els.currentRoundLabel.textContent = `Runde ${roundNumber} · live`;
+        els.currentGain.textContent = `${nf.format(currentTotal)} XP`;
+        els.readingGain.textContent = `${nf.format(Number(current?.stepTotal) || 0)} XP`;
+        els.sessionGain.textContent = `${nf.format(completedTotal + currentTotal)} XP`;
+        els.roundCount.textContent = nf.format(finished.length);
+        if (!roundBaseline()) els.roundStatus.textContent = `Runde ${roundNumber} venter på startverdi`;
+        else if (current) els.roundStatus.textContent = `Runde ${roundNumber} pågår · ${nf.format(currentTotal)} XP siden start`;
+        else els.roundStatus.textContent = `Runde ${roundNumber} pågår · klar for neste avlesning`;
+      }
+
+      function renderHistory() {
+        const snapshots = [...state.snapshots].reverse();
+        els.historySubtitle.textContent = snapshots.length ? `${snapshots.length} avlesning${snapshots.length === 1 ? '' : 'er'} totalt · aktiv: ${currentSession()?.name || 'uten navn'}` : 'Ingen avlesninger lagret ennå';
+        if (!snapshots.length) {
+          els.history.innerHTML = '<div class="empty">Den første lagringen oppretter en startverdi.</div>';
+          return;
+        }
+        els.history.innerHTML = `<table><thead><tr><th>Tidspunkt</th><th>Økt</th><th>Runde</th>${ROLES.map(r => `<th>${r.name}</th>`).join('')}<th>Totalt</th><th></th></tr></thead><tbody>${snapshots.map(snapshot => {
+          const session = state.sessions.find(item => item.id === snapshot.sessionId);
+          const baseline = snapshot.kind === 'baseline';
+          const roundLabel = baseline ? '<span class="baseline">Start</span>' : snapshot.kind === 'round' ? `<span class="round-done">Runde ${snapshot.roundNumber} · ferdig</span>` : `<span class="round-live">Runde ${snapshot.roundNumber} · avlesning</span>`;
+          return `<tr><td>${df.format(new Date(snapshot.createdAt))}</td><td>${session?.name || 'Ukjent økt'}</td><td>${roundLabel}</td>${ROLES.map(role => {
+            const savedXp = snapshot.values?.[role.id]?.current;
+            const gain = snapshot.gains?.[role.id];
+            const detail = baseline ? 'lagret startverdi' : gain == null ? 'ingen gevinst beregnet' : `+${nf.format(gain)} i runden`;
+            return `<td class="${savedXp != null ? 'saved-xp' : 'baseline'}">${savedXp == null ? '—' : nf.format(savedXp) + ' XP<small>' + detail + '</small>'}</td>`;
+          }).join('')}<td class="${baseline ? 'baseline' : 'gain'}">${baseline ? '—' : '+' + nf.format(snapshot.totalGain || 0) + ' XP<small>+' + nf.format(snapshot.stepTotal || 0) + ' siden sist</small>'}</td><td><button class="btn small" type="button" data-edit-id="${snapshot.id}">Korriger</button></td></tr>`;
+        }).join('')}</tbody></table>`;
+      }
+
+      function openEditSnapshot(snapshotId) {
+        const snapshot = state.snapshots.find(item => item.id === snapshotId);
+        if (!snapshot) return;
+        const session = state.sessions.find(item => item.id === snapshot.sessionId);
+        editingSnapshotId = snapshot.id;
+        els.editDescription.textContent = `${session?.name || 'Ukjent økt'} · ${df.format(new Date(snapshot.createdAt))}. Feltene under viser verdiene som ble lagret da. Senere avlesninger og rundesummer beregnes på nytt automatisk.`;
+        els.editFields.innerHTML = ROLES.map(role => {
+          const value = snapshot.values?.[role.id] || {};
+          return `<section class="class-card">
+            <div class="class-title"><strong>${role.name}</strong></div>
+            <div class="fields">
+              <div class="field"><label for="edit-level-${role.id}">Nivå</label><input id="edit-level-${role.id}" inputmode="numeric" value="${safeValue(value.level)}" placeholder="0"></div>
+              <div class="field"><label for="edit-current-${role.id}">Nå XP</label><input id="edit-current-${role.id}" inputmode="numeric" value="${safeValue(value.current)}" placeholder="0"></div>
+            </div>
+          </section>`;
+        }).join('');
+        els.editNotice.textContent = '';
+        els.editNotice.className = 'notice';
+        els.editDialog.showModal();
+      }
+
+      function recalculateSnapshotSeries(snapshots) {
+        let baseline = null;
+        let previousReading = null;
+        for (const snapshot of snapshots) {
+          if (snapshot.kind === 'baseline') {
+            snapshot.gains = Object.fromEntries(ROLES.map(role => [role.id, null]));
+            snapshot.stepGains = Object.fromEntries(ROLES.map(role => [role.id, null]));
+            snapshot.totalGain = 0;
+            snapshot.stepTotal = 0;
+            baseline = snapshot;
+            previousReading = snapshot;
+            continue;
+          }
+          if (!baseline) return { ok: false, message: 'Startavlesningen mangler for denne økten.' };
+          const deltas = snapshotDeltas(snapshot, baseline);
+          const stepDeltas = snapshotDeltas(snapshot, previousReading || baseline);
+          const invalidRoles = ROLES.filter(role => deltas[role.id].warning || stepDeltas[role.id].warning);
+          if (invalidRoles.length) {
+            return { ok: false, message: `Korrigeringen gjør at Nå XP går ned for ${invalidRoles.map(role => role.name).join(', ')}. Kontroller denne og de neste avlesningene.` };
+          }
+          snapshot.gains = Object.fromEntries(ROLES.map(role => [role.id, deltas[role.id].value]));
+          snapshot.stepGains = Object.fromEntries(ROLES.map(role => [role.id, stepDeltas[role.id].value]));
+          snapshot.totalGain = Object.values(snapshot.gains).reduce((sum, value) => sum + (value || 0), 0);
+          snapshot.stepTotal = Object.values(snapshot.stepGains).reduce((sum, value) => sum + (value || 0), 0);
+          previousReading = snapshot;
+          if (snapshot.kind === 'round') {
+            baseline = snapshot;
+            previousReading = snapshot;
+          }
+        }
+        return { ok: true };
+      }
+
+      function saveEditedSnapshot() {
+        const snapshot = state.snapshots.find(item => item.id === editingSnapshotId);
+        if (!snapshot) return els.editDialog.close();
+        const values = Object.fromEntries(ROLES.map(role => [role.id, {
+          level: numberOrNull($(`#edit-level-${role.id}`).value),
+          current: numberOrNull($(`#edit-current-${role.id}`).value)
+        }]));
+        if (!ROLES.some(role => values[role.id].current != null)) {
+          els.editNotice.textContent = 'Fyll inn minst én Nå XP-verdi.';
+          els.editNotice.className = 'notice error';
+          return;
+        }
+
+        const copies = state.snapshots.filter(item => item.sessionId === snapshot.sessionId).map(item => JSON.parse(JSON.stringify(item)));
+        const editedCopy = copies.find(item => item.id === snapshot.id);
+        editedCopy.values = values;
+        const result = recalculateSnapshotSeries(copies);
+        if (!result.ok) {
+          els.editNotice.textContent = result.message;
+          els.editNotice.className = 'notice error';
+          return;
+        }
+
+        copies.forEach(copy => {
+          const original = state.snapshots.find(item => item.id === copy.id);
+          original.values = copy.values;
+          original.gains = copy.gains;
+          original.stepGains = copy.stepGains;
+          original.totalGain = copy.totalGain;
+          original.stepTotal = copy.stepTotal;
+        });
+        const session = state.sessions.find(item => item.id === snapshot.sessionId);
+        session.completedRounds = copies.filter(item => item.kind === 'round').length;
+        session.roundBaselineId = [...copies].reverse().find(item => item.kind === 'round' || item.kind === 'baseline')?.id || null;
+        persist();
+        editingSnapshotId = null;
+        els.editDialog.close();
+        if (snapshot.sessionId === state.activeSessionId) renderFields(sessionSnapshots().at(-1)?.values || emptyValues());
+        renderAll();
+        setNotice('Avlesningen er korrigert, og senere XP-gevinster er beregnet på nytt.', 'good');
+      }
+
+      function newSession() {
+        const hasData = sessionSnapshots().length > 0;
+        const go = () => {
+          const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+          state.activeSessionId = id;
+          state.sessions.push({ id, name: `Økt ${state.sessions.length + 1}`, createdAt: new Date().toISOString(), completedRounds: 0, roundBaselineId: null });
+          persist();
+          renderFields();
+          renderAll();
+          setNotice('Ny økt er startet. Første lagring blir startverdien.', 'good');
+        };
+        if (hasData) askConfirm('Start ny økt?', 'Historikken beholdes, men telleren og sammendraget starter på nytt.', go, false);
+        else go();
+      }
+
+      function clearAll() {
+        askConfirm('Slett all historikk?', 'Alle økter og avlesninger i denne nettleseren slettes. Last ned en sikkerhetskopi først hvis du vil kunne gjenopprette dataene.', () => {
+          localStorage.removeItem(STORAGE_KEY);
+          state = defaultState();
+          renderFields();
+          renderAll();
+          setNotice('All historikk er slettet.', 'good');
+        }, true);
+      }
+
+      function askConfirm(title, text, action, dangerous) {
+        els.dialogTitle.textContent = title;
+        els.dialogText.textContent = text;
+        els.dialogConfirm.textContent = dangerous ? 'Slett alt' : 'Start ny økt';
+        els.dialogConfirm.className = dangerous ? 'btn danger' : 'btn primary';
+        confirmAction = action;
+        els.dialog.showModal();
+      }
+
+      function setNotice(text, type = '') {
+        els.notice.textContent = text;
+        els.notice.className = `notice ${type}`;
+      }
+
+      function loadImageFile(file) {
+        if (!file || !file.type.startsWith('image/')) return setNotice('Filen må være et bilde.', 'error');
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          image = img;
+          crop = { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight };
+          els.dropzone.style.display = 'none';
+          els.previewWrap.classList.add('visible');
+          drawPreview();
+          setNotice('Bildet er klart. Juster utsnittet ved behov og velg Les av XP.', '');
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); setNotice('Bildet kunne ikke åpnes.', 'error'); };
+        img.src = url;
+      }
+
+      function drawPreview(tempCrop = crop) {
+        if (!image) return;
+        const maxWidth = Math.min(900, image.naturalWidth);
+        const scale = maxWidth / image.naturalWidth;
+        const canvas = els.canvas;
+        canvas.width = maxWidth;
+        canvas.height = Math.round(image.naturalHeight * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        if (!tempCrop) return;
+        const r = { x: tempCrop.x * scale, y: tempCrop.y * scale, w: tempCrop.w * scale, h: tempCrop.h * scale };
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,.55)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(r.x, r.y, r.w, r.h);
+        ctx.drawImage(image, tempCrop.x, tempCrop.y, tempCrop.w, tempCrop.h, r.x, r.y, r.w, r.h);
+        ctx.strokeStyle = '#f4cc62';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 5]);
+        ctx.strokeRect(r.x + 1, r.y + 1, Math.max(0, r.w - 2), Math.max(0, r.h - 2));
+        ctx.restore();
+      }
+
+      function pointerPosition(event) {
+        const rect = els.canvas.getBoundingClientRect();
+        return { x: Math.max(0, Math.min(els.canvas.width, (event.clientX - rect.left) * els.canvas.width / rect.width)), y: Math.max(0, Math.min(els.canvas.height, (event.clientY - rect.top) * els.canvas.height / rect.height)) };
+      }
+
+      const LABEL_PREFIX = { assault: 'ASSA', medic: 'MEDI', support: 'SUPP', recon: 'RECO', driver: 'DRIV', pilot: 'PILO' };
+
+      function sourceRect() {
+        return crop || { x: 0, y: 0, w: image.naturalWidth, h: image.naturalHeight };
+      }
+
+      // Lager svart tekst på hvit bakgrunn. Bare lyse, lite fargede piksler regnes som tekst,
+      // slik at de gule ringene og ikonbakgrunnen ikke forstyrrer avlesningen.
+      function textMaskCanvas(rect, scale) {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(rect.w * scale));
+        canvas.height = Math.max(1, Math.round(rect.h * scale));
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(image, rect.x, rect.y, rect.w, rect.h, 0, 0, canvas.width, canvas.height);
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = pixels.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const min = Math.min(d[i], d[i + 1], d[i + 2]);
+          const max = Math.max(d[i], d[i + 1], d[i + 2]);
+          const value = (min > 115 && max - min < 70) ? 0 : 255;
+          d[i] = d[i + 1] = d[i + 2] = value;
+          d[i + 3] = 255;
+        }
+        ctx.putImageData(pixels, 0, 0);
+        return canvas;
+      }
+
+      function editDistance(a, b) {
+        const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+        for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+        for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+          dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        }
+        return dp[a.length][b.length];
+      }
+
+      // Finner klassenavnene, også når OCR-en har lest en bokstav eller to feil.
+      function findLabels(words, scale, rect) {
+        const labels = {};
+        for (const word of words) {
+          const text = String(word.text || '').toUpperCase().replace(/[^A-Z]/g, '');
+          if (text.length < 4) continue;
+          const box = word.bbox || {};
+          let best = null;
+          for (const role of ROLES) {
+            if (labels[role.id]) continue;
+            const name = role.name.toUpperCase();
+            const distance = text.startsWith(LABEL_PREFIX[role.id]) ? 0 : editDistance(text, name);
+            const allowed = name.length >= 6 ? 2 : 1;
+            if (distance <= allowed && (!best || distance < best.distance)) best = { id: role.id, distance };
+          }
+          if (best) labels[best.id] = { x: rect.x + (box.x0 + box.x1) / 2 / scale, y: rect.y + (box.y0 + box.y1) / 2 / scale };
+        }
+        return labels;
+      }
+
+      // Reserveløsning: finner "Nå XP"-tallene (f.eks. "55,241 /") og regner ut hvor klassenavnene står.
+      function anchorsFromCurrentXp(words, scale, rect) {
+        const list = words.map((word, i) => {
+          const raw = String(word.text || '');
+          const next = String(words[i + 1]?.text || '');
+          const box = word.bbox || {};
+          return { raw, digits: raw.replace(/\D/g, ''), slash: raw.includes('/') || next.startsWith('/'), x: rect.x + (box.x0 + box.x1) / 2 / scale, y: rect.y + (box.y0 + box.y1) / 2 / scale, h: (box.y1 - box.y0) / scale };
+        }).filter(w => w.digits.length >= 4 && w.digits.length <= 9 && w.slash && !/XP/i.test(w.raw));
+        if (list.length < 2) return {};
+        list.sort((a, b) => a.y - b.y);
+        const rows = [];
+        for (const w of list) {
+          const row = rows.find(r => Math.abs(r[0].y - w.y) < Math.max(8, w.h * 2));
+          row ? row.push(w) : rows.push([w]);
+        }
+        if (rows.length > 2) return {};
+        rows.forEach(r => r.sort((a, b) => a.x - b.x));
+        const full = rows.find(r => r.length === 3);
+        if (!full) return {};
+        const colX = full.map(w => w.x);
+        const dx = (colX[2] - colX[0]) / 2;
+        if (!(dx > 20)) return {};
+        const anchors = {};
+        rows.forEach((row, r) => {
+          const rowIndex = rows.length === 2 ? r : (row[0].y - rect.y > rect.h * .6 ? 1 : 0);
+          row.forEach(w => {
+            const c = colX.reduce((bestIndex, x, i) => Math.abs(x - w.x) < Math.abs(colX[bestIndex] - w.x) ? i : bestIndex, 0);
+            anchors[ROLES[rowIndex * 3 + c].id] = { x: w.x, y: w.y - .77 * dx };
+          });
+        });
+        return anchors;
+      }
+
+      function average(list) {
+        const valid = list.filter(value => value != null);
+        return valid.length ? valid.reduce((sum, value) => sum + value, 0) / valid.length : null;
+      }
+
+      function buildLayout(labels) {
+        const ids = ROLES.map(role => role.id);
+        const colX = [0, 1, 2].map(c => average([labels[ids[c]]?.x, labels[ids[c + 3]]?.x]));
+        const rowY = [0, 1].map(r => average([0, 1, 2].map(c => labels[ids[r * 3 + c]]?.y)));
+        const knownCols = colX.map((x, i) => x == null ? null : i).filter(i => i != null);
+        if (knownCols.length < 2 || (rowY[0] == null && rowY[1] == null)) return null;
+        const first = knownCols[0], last = knownCols.at(-1);
+        const dx = (colX[last] - colX[first]) / (last - first);
+        if (!(dx > 20)) return null;
+        for (let c = 0; c < 3; c++) if (colX[c] == null) colX[c] = colX[first] + (c - first) * dx;
+        if (rowY[0] == null) rowY[0] = rowY[1] - 1.17 * dx;
+        if (rowY[1] == null) rowY[1] = rowY[0] + 1.17 * dx;
+        const dy = rowY[1] - rowY[0];
+        if (!(dy > 20)) return null;
+        return { colX, rowY, dx, dy };
+      }
+
+      // Område under klassenavnet der nivå og "Nå XP" står (over maks-XP-linjen).
+      function roleRect(layout, index, bounds) {
+        const cx = layout.colX[index % 3];
+        const ly = layout.rowY[Math.floor(index / 3)];
+        const x0 = Math.max(bounds.x, cx - .32 * layout.dx);
+        const x1 = Math.min(bounds.x + bounds.w, cx + .32 * layout.dx);
+        const y0 = Math.max(bounds.y, ly + .38 * layout.dy);
+        const y1 = Math.min(bounds.y + bounds.h, ly + .78 * layout.dy);
+        if (x1 - x0 < 5 || y1 - y0 < 5) return null;
+        return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+      }
+
+      function parseRoleText(text) {
+        const lines = String(text || '').split(/\r?\n/).map(line => line.trim()).filter(line => /\d/.test(line));
+        let currentIndex = lines.findIndex(line => line.includes('/') && line.split('/')[0].replace(/\D/g, '').length >= 2);
+        if (currentIndex < 0) currentIndex = lines.findIndex(line => line.replace(/\D/g, '').length >= 4);
+        const result = { level: '', current: '' };
+        if (currentIndex >= 0) result.current = Number(lines[currentIndex].split('/')[0].replace(/\D/g, ''));
+        const above = lines.slice(0, currentIndex < 0 ? lines.length : currentIndex);
+        for (let i = above.length - 1; i >= 0; i--) {
+          const digits = above[i].replace(/\D/g, '');
+          if (digits.length >= 1 && digits.length <= 3) { result.level = Number(digits); break; }
+        }
+        return result;
+      }
+
+      function setProgress(percent, text) {
+        els.progressBar.style.width = `${Math.max(2, Math.min(100, Math.round(percent)))}%`;
+        if (text) els.progressText.textContent = text;
+      }
+
+      async function readXp() {
+        if (!image) return;
+        if (!window.Tesseract) return setNotice('OCR-biblioteket kunne ikke lastes. Sjekk internettilkoblingen, eller skriv inn tallene manuelt.', 'error');
+        els.read.disabled = true;
+        els.progress.classList.add('visible');
+        setProgress(2, 'Klargjør tekstgjenkjenning…');
+        let worker = null;
+        try {
+          let stage = 'init';
+          const statusText = { 'loading tesseract core': 'Laster OCR-motor…', 'initializing tesseract': 'Starter OCR…', 'loading language traineddata': 'Laster språkmodell…', 'initializing api': 'Forbereder avlesning…' };
+          worker = await Tesseract.createWorker('eng', 1, {
+            logger: message => {
+              if (stage !== 'init') return;
+              if (typeof message.progress === 'number') setProgress(message.progress * 25, statusText[message.status] || 'Arbeider…');
+            }
+          });
+
+          // Steg 1: finn klassenavnene for å kartlegge oppsettet i bildet
+          stage = 'labels';
+          setProgress(30, 'Finner klassene i bildet…');
+          const rect = sourceRect();
+          const scale = Math.min(3, Math.max(1.5, 1500 / rect.w));
+          const overview = textMaskCanvas(rect, scale);
+          await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT, tessedit_char_whitelist: '' });
+          const overviewResult = await worker.recognize(overview);
+          const overviewWords = overviewResult.data.words || [];
+          const labels = findLabels(overviewWords, scale, rect);
+          let layout = buildLayout(labels);
+          let method = `klassenavn (${Object.keys(labels).length}/6)`;
+          if (!layout || Object.keys(labels).length < 4) {
+            const anchors = { ...anchorsFromCurrentXp(overviewWords, scale, rect), ...labels };
+            const alt = buildLayout(anchors);
+            if (alt) { layout = alt; method = `XP-tall og klassenavn (${Object.keys(anchors).length}/6)`; }
+          }
+          if (!layout) method = 'faste posisjoner (fant ikke oppsettet)';
+          console.info('[XP Tracker] oppsett funnet via', method, layout);
+
+          let values;
+          if (!layout) {
+            values = parseOcrResult(overviewResult.data, overview.width, overview.height);
+          } else {
+            // Steg 2: les nivå og Nå XP i hvert klasseområde med kun tall tillatt
+            values = emptyValues();
+            await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK, tessedit_char_whitelist: '0123456789,./' });
+            for (let i = 0; i < ROLES.length; i++) {
+              const role = ROLES[i];
+              setProgress(45 + i * 9, `Leser ${role.name}…`);
+              const area = roleRect(layout, i, rect);
+              if (!area) continue;
+              const result = await worker.recognize(textMaskCanvas(area, 3));
+              const parsed = parseRoleText(result.data.text);
+              if (parsed.current === '' || parsed.level === '') {
+                // Reserve: bruk tallene fra oversiktsavlesningen innenfor samme område
+                const inside = overviewWords.map(word => ({ text: String(word.text || ''), box: word.bbox || {} }))
+                  .map(w => ({ ...w, x: rect.x + (w.box.x0 + w.box.x1) / 2 / scale, y: rect.y + (w.box.y0 + w.box.y1) / 2 / scale }))
+                  .filter(w => /\d/.test(w.text) && w.x >= area.x && w.x <= area.x + area.w && w.y >= area.y && w.y <= area.y + area.h)
+                  .sort((a, b) => a.y - b.y);
+                const backup = parseRoleText(inside.map(w => w.text).join('\n'));
+                if (parsed.current === '') parsed.current = backup.current;
+                if (parsed.level === '') parsed.level = backup.level;
+              }
+              values[role.id] = parsed;
+            }
+          }
+          renderFields(values);
+          const found = ROLES.filter(role => values[role.id].current !== '').length;
+          els.progressBar.style.width = '100%';
+          els.progressText.textContent = `Ferdig – fant Nå XP for ${found} av 6 klasser · oppsett via ${method}.`;
+          setNotice(found ? `Fant ${found} av 6 XP-verdier. Kontroller alle tall mot bildet før du lagrer.` : 'Fant ingen sikre tall. Juster utsnittet eller skriv inn verdiene manuelt.', found === 6 ? 'good' : 'warn');
+        } catch (error) {
+          console.error(error);
+          setNotice('Avlesningen mislyktes. Prøv et strammere utsnitt, eller skriv inn tallene manuelt.', 'error');
+          els.progressText.textContent = 'Avlesningen mislyktes.';
+        } finally {
+          if (worker) worker.terminate().catch(() => {});
+          els.read.disabled = false;
+        }
+      }
+
+      function parseOcrResult(data, width, height) {
+        const values = emptyValues();
+        const words = (data.words || []).map(word => {
+          const box = word.bbox || {};
+          const digits = String(word.text || '').replace(/\D/g, '');
+          return { digits, x: ((box.x0 || 0) + (box.x1 || 0)) / 2 / width, y: ((box.y0 || 0) + (box.y1 || 0)) / 2 / height };
+        }).filter(word => word.digits);
+
+        const yPositions = {
+          0: { level: .35, current: .402 },
+          1: { level: .795, current: .855 }
+        };
+        ROLES.forEach(role => {
+          for (const field of ['level', 'current']) {
+            const desiredY = yPositions[role.row][field];
+            const candidates = words.filter(word => Math.abs(word.x - role.x) < .12 && Math.abs(word.y - desiredY) < .045
+              && (field === 'level' ? word.digits.length <= 3 : word.digits.length >= 3));
+            candidates.sort((a, b) => (Math.abs(a.x - role.x) * .5 + Math.abs(a.y - desiredY)) - (Math.abs(b.x - role.x) * .5 + Math.abs(b.y - desiredY)));
+            const candidate = candidates[0];
+            if (!candidate) continue;
+            const number = Number(candidate.digits);
+            if (field === 'level' && number <= 999) values[role.id][field] = number;
+            if (field !== 'level' && number <= 999999999) values[role.id][field] = number;
+          }
+        });
+        return values;
+      }
+
+      function csvEscape(value) { const s = String(value ?? ''); return /[";,\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }
+
+      function exportCsv() {
+        const rows = [['Økt', 'Tidspunkt', 'Runde', 'Status', ...ROLES.flatMap(r => [`${r.name} nivå`, `${r.name} XP`, `${r.name} gevinst`]), 'Rundegevinst', 'Siden forrige avlesning']];
+        state.sessions.forEach(session => {
+          state.snapshots.filter(s => s.sessionId === session.id).forEach(snapshot => {
+            const status = snapshot.kind === 'baseline' ? 'Startverdi' : snapshot.kind === 'round' ? 'Ferdig' : 'Avlesning';
+            rows.push([session.name, snapshot.createdAt, snapshot.roundNumber || 'Start', status, ...ROLES.flatMap(role => {
+              const value = snapshot.values[role.id] || {};
+              return [value.level, value.current, snapshot.gains?.[role.id]];
+            }), snapshot.totalGain || 0, snapshot.stepTotal || 0]);
+          });
+        });
+        download(`battlefield-xp-${dateStamp()}.csv`, '\ufeff' + rows.map(row => row.map(csvEscape).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
+      }
+
+      function backup() { download(`battlefield-xp-backup-${dateStamp()}.json`, JSON.stringify(state, null, 2), 'application/json'); }
+      function dateStamp() { return new Date().toISOString().slice(0, 10); }
+      function download(filename, content, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url; link.download = filename; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      async function importBackup(file) {
+        try {
+          const parsed = JSON.parse(await file.text());
+          if (!parsed || !Array.isArray(parsed.sessions) || !Array.isArray(parsed.snapshots)) throw new Error('Ugyldig format');
+          state = normalizeState(parsed);
+          persist();
+          renderFields(sessionSnapshots().at(-1)?.values || emptyValues());
+          renderAll();
+          setNotice('Sikkerhetskopien er importert.', 'good');
+        } catch (_) { setNotice('Filen er ikke en gyldig sikkerhetskopi fra XP Tracker.', 'error'); }
+        els.import.value = '';
+      }
+
+      els.dropzone.addEventListener('click', () => els.file.click());
+      els.dropzone.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') els.file.click(); });
+      els.file.addEventListener('change', () => loadImageFile(els.file.files[0]));
+      ['dragenter', 'dragover'].forEach(type => els.dropzone.addEventListener(type, event => { event.preventDefault(); els.dropzone.classList.add('drag'); }));
+      ['dragleave', 'drop'].forEach(type => els.dropzone.addEventListener(type, event => { event.preventDefault(); els.dropzone.classList.remove('drag'); }));
+      els.dropzone.addEventListener('drop', event => loadImageFile(event.dataTransfer.files[0]));
+      document.addEventListener('paste', event => { const file = [...event.clipboardData.items].find(item => item.type.startsWith('image/'))?.getAsFile(); if (file) loadImageFile(file); });
+
+      els.canvas.addEventListener('pointerdown', event => { drawing = true; drawStart = pointerPosition(event); els.canvas.setPointerCapture(event.pointerId); });
+      els.canvas.addEventListener('pointermove', event => {
+        if (!drawing) return;
+        const p = pointerPosition(event);
+        const displayCrop = { x: Math.min(drawStart.x, p.x), y: Math.min(drawStart.y, p.y), w: Math.abs(p.x - drawStart.x), h: Math.abs(p.y - drawStart.y) };
+        const sx = image.naturalWidth / els.canvas.width, sy = image.naturalHeight / els.canvas.height;
+        drawPreview({ x: displayCrop.x * sx, y: displayCrop.y * sy, w: displayCrop.w * sx, h: displayCrop.h * sy });
+      });
+      els.canvas.addEventListener('pointerup', event => {
+        if (!drawing) return;
+        drawing = false;
+        const p = pointerPosition(event);
+        const sx = image.naturalWidth / els.canvas.width, sy = image.naturalHeight / els.canvas.height;
+        const next = { x: Math.min(drawStart.x, p.x) * sx, y: Math.min(drawStart.y, p.y) * sy, w: Math.abs(p.x - drawStart.x) * sx, h: Math.abs(p.y - drawStart.y) * sy };
+        if (next.w > 80 && next.h > 60) crop = next;
+        drawPreview();
+      });
+
+      els.read.addEventListener('click', readXp);
+      els.resetCrop.addEventListener('click', () => { crop = { x: 0, y: 0, w: image.naturalWidth, h: image.naturalHeight }; drawPreview(); });
+      els.changeImage.addEventListener('click', () => els.file.click());
+      els.save.addEventListener('click', saveSnapshot);
+      els.finishRound.addEventListener('click', finishRound);
+      els.newSession.addEventListener('click', newSession);
+      els.export.addEventListener('click', exportCsv);
+      els.backup.addEventListener('click', backup);
+      els.import.addEventListener('change', () => { if (els.import.files[0]) importBackup(els.import.files[0]); });
+      els.clear.addEventListener('click', clearAll);
+      els.history.addEventListener('click', event => {
+        const button = event.target.closest('[data-edit-id]');
+        if (button) openEditSnapshot(button.dataset.editId);
+      });
+      els.sessionName.addEventListener('change', () => { const session = currentSession(); if (session) { session.name = els.sessionName.value.trim() || 'Uten navn'; persist(); renderHistory(); } });
+      els.dialogCancel.addEventListener('click', () => { confirmAction = null; els.dialog.close(); });
+      els.dialogConfirm.addEventListener('click', () => { const action = confirmAction; confirmAction = null; els.dialog.close(); if (action) action(); });
+      els.editCancel.addEventListener('click', () => { editingSnapshotId = null; els.editDialog.close(); });
+      els.editSave.addEventListener('click', saveEditedSnapshot);
+
+      renderFields(sessionSnapshots().at(-1)?.values || emptyValues());
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
