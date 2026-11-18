@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="no">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -102,6 +102,10 @@
     .dropzone strong { display: block; font-size: 1.05rem; }
     .dropzone span { display: block; margin-top: 6px; color: var(--muted); font-size: .86rem; }
 
+    .example-shot { margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: #0d1114; }
+    .example-shot summary { cursor: pointer; color: var(--accent); font-weight: 750; }
+    .example-shot img { display: block; width: 100%; max-width: 660px; margin: 12px auto 6px; border-radius: 8px; }
+    .example-shot p { margin: 8px 0 0; color: var(--muted); font-size: .8rem; }
     .preview-wrap { display: none; }
     .preview-wrap.visible { display: block; }
     .canvas-shell { position: relative; width: 100%; background: #050607; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; touch-action: none; }
@@ -201,46 +205,48 @@
   <main class="app">
     <header>
       <div>
-        <p class="eyebrow">Runde for runde</p>
+        <p class="eyebrow">Round by round</p>
         <h1>XP Tracker</h1>
-        <p>Les av klassestatistikk fra skjermbilder, kontroller tallene og behold all fremgang lokalt i nettleseren.</p>
+        <p>Extract class stats from screenshots, verify the numbers, and keep your progress locally in your browser.</p>
       </div>
       <div class="session-pill">
-        <label for="sessionName">Aktiv økt</label>
-        <input id="sessionName" maxlength="50" value="Kveldens økt" aria-label="Navn på aktiv økt">
+        <label for="sessionName">Active session</label>
+        <input id="sessionName" maxlength="50" value="Today's session" aria-label="Active session name">
       </div>
     </header>
 
     <section class="summary" aria-label="Oppsummering">
-      <article class="metric"><span id="currentRoundLabel">Runde 1 · live</span><strong id="currentGain">0 XP</strong></article>
-      <article class="metric"><span>Siden forrige avlesning</span><strong id="readingGain">0 XP</strong></article>
-      <article class="metric"><span>Denne økten</span><strong id="sessionGain">0 XP</strong></article>
-      <article class="metric"><span>Ferdige runder</span><strong id="roundCount">0</strong></article>
+      <article class="metric"><span id="currentRoundLabel">Round 1 · live</span><strong id="currentGain">0 XP</strong></article>
+      <article class="metric"><span>Since last reading</span><strong id="readingGain">0 XP</strong></article>
+      <article class="metric"><span>This session</span><strong id="sessionGain">0 XP</strong></article>
+      <article class="metric"><span>Completed rounds</span><strong id="roundCount">0</strong></article>
     </section>
 
     <section class="workspace">
       <article class="panel">
         <div class="panel-head">
-          <div><h2>1. Legg inn skjermbilde</h2><small>Lim inn, dra inn eller velg en bildefil</small></div>
+          <div><h2>1. Upload screenshot</h2><small>Paste, drag and drop, or choose an image</small></div>
         </div>
         <div class="panel-body">
           <input id="fileInput" type="file" accept="image/*" hidden>
-          <div id="dropzone" class="dropzone" role="button" tabindex="0" aria-label="Velg skjermbilde">
+          <div id="dropzone" class="dropzone" role="button" tabindex="0" aria-label="Choose screenshot">
             <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
-            <div><strong>Slipp skjermbildet her</strong><span>eller klikk for å velge · Ctrl+V fungerer også</span></div>
+            <div><strong>Drop your screenshot here</strong><span>or click to select · Ctrl+V also works</span></div>
           </div>
+
+          <details class="example-shot"><summary>View example screenshot</summary><img src="/example-xp.svg" alt="Example of a WARDOG class XP panel with six classes and their current XP values" loading="lazy"><p>Capture this class XP panel in-game. Upload your own screenshot to read your stats.</p></details>
 
           <div id="previewWrap" class="preview-wrap">
             <div class="canvas-shell"><canvas id="previewCanvas"></canvas></div>
-            <p class="preview-help">Dra en ramme rundt selve XP-panelet dersom skjermbildet inneholder mer enn statistikken. La hele bildet være markert når bildet allerede er beskåret.</p>
+            <p class="preview-help">Draw a box around the XP panel if your screenshot contains more than the stats. Use the full image if it is already cropped.</p>
             <div class="toolbar">
-              <button id="readButton" class="btn primary" type="button">Les av XP</button>
-              <button id="resetCropButton" class="btn" type="button">Bruk hele bildet</button>
-              <button id="changeImageButton" class="btn ghost" type="button">Bytt bilde</button>
+              <button id="readButton" class="btn primary" type="button">Read XP</button>
+              <button id="resetCropButton" class="btn" type="button">Use full image</button>
+              <button id="changeImageButton" class="btn ghost" type="button">Change image</button>
             </div>
             <div id="progress" class="progress" aria-live="polite">
               <div class="progress-line"><i id="progressBar"></i></div>
-              <p id="progressText">Klargjør tekstgjenkjenning…</p>
+              <p id="progressText">Preparing text recognition…</p>
             </div>
           </div>
         </div>
@@ -248,29 +254,29 @@
 
       <article class="panel">
         <div class="panel-head">
-          <div><h2>2. Kontroller og lagre</h2><small id="roundStatus">Runde 1 venter på startverdi</small></div>
+          <div><h2>2. Review and save</h2><small id="roundStatus">Round 1 is waiting for a baseline</small></div>
         </div>
         <div class="panel-body">
           <div id="classFields" class="classes"></div>
           <div class="save-row">
-            <button id="saveButton" class="btn primary" type="button">Lagre avlesning</button>
-            <button id="finishRoundButton" class="btn round" type="button">Ny runde</button>
+            <button id="saveButton" class="btn primary" type="button">Save reading</button>
+            <button id="finishRoundButton" class="btn round" type="button">Next round</button>
           </div>
-          <p id="notice" class="notice" aria-live="polite">Første avlesning blir startverdien. Du kan deretter oppdatere flere ganger før du trykker Ny runde.</p>
+          <p id="notice" class="notice" aria-live="polite">Første avlesning blir startverdien. Du kan deretter oppdatere flere ganger før du trykker Next round.</p>
         </div>
       </article>
     </section>
 
     <section class="panel history-panel">
       <div class="panel-head">
-        <div><h2>Historikk</h2><small id="historySubtitle">Ingen avlesninger lagret ennå</small></div>
+        <div><h2>History</h2><small id="historySubtitle">No readings saved yet</small></div>
         <div class="history-tools">
-          <button id="newSessionButton" class="btn" type="button">Ny økt</button>
-          <button id="exportButton" class="btn" type="button">Eksporter CSV</button>
-          <button id="backupButton" class="btn" type="button">Sikkerhetskopi</button>
-          <label class="btn" for="importInput">Importer</label>
+          <button id="newSessionButton" class="btn" type="button">New session</button>
+          <button id="exportButton" class="btn" type="button">Export CSV</button>
+          <button id="backupButton" class="btn" type="button">Backup</button>
+          <label class="btn" for="importInput">Import</label>
           <input id="importInput" type="file" accept="application/json,.json" hidden>
-          <button id="clearButton" class="btn danger" type="button">Slett alt</button>
+          <button id="clearButton" class="btn danger" type="button">Delete all</button>
         </div>
       </div>
       <div id="historyContent" class="history-scroll"></div>
@@ -279,17 +285,17 @@
 
   <dialog id="confirmDialog">
     <div class="dialog-body"><h3 id="dialogTitle">Er du sikker?</h3><p id="dialogText"></p></div>
-    <div class="dialog-actions"><button id="dialogCancel" class="btn" type="button">Avbryt</button><button id="dialogConfirm" class="btn danger" type="button">Bekreft</button></div>
+    <div class="dialog-actions"><button id="dialogCancel" class="btn" type="button">Cancel</button><button id="dialogConfirm" class="btn danger" type="button">Bekreft</button></div>
   </dialog>
 
   <dialog id="editDialog" class="edit-dialog">
     <div class="dialog-body">
-      <h3>Korriger avlesning</h3>
-      <p id="editDescription">Endre feil avleste verdier. Senere avlesninger og rundesummer beregnes på nytt automatisk.</p>
+      <h3>Edit reading</h3>
+      <p id="editDescription">Correct any incorrectly recognized values. Later readings and round totals are recalculated automatically.</p>
       <div id="editFields" class="classes" style="margin-top:18px"></div>
       <p id="editNotice" class="notice" aria-live="polite"></p>
     </div>
-    <div class="dialog-actions"><button id="editCancel" class="btn" type="button">Avbryt</button><button id="editSave" class="btn primary" type="button">Lagre korrigering</button></div>
+    <div class="dialog-actions"><button id="editCancel" class="btn" type="button">Cancel</button><button id="editSave" class="btn primary" type="button">Save changes</button></div>
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
@@ -306,8 +312,8 @@
         { id: 'pilot', name: 'Pilot', x: .904, row: 1 }
       ];
       const STORAGE_KEY = 'battlefield-xp-tracker-v1';
-      const nf = new Intl.NumberFormat('nb-NO');
-      const df = new Intl.DateTimeFormat('nb-NO', { dateStyle: 'short', timeStyle: 'short' });
+      const nf = new Intl.NumberFormat('en-US');
+      const df = new Intl.DateTimeFormat('en-US', { dateStyle: 'short', timeStyle: 'short' });
 
       const $ = (selector) => document.querySelector(selector);
       const els = {
@@ -338,7 +344,7 @@
 
       function defaultState() {
         const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
-        return { version: 2, activeSessionId: id, sessions: [{ id, name: 'Kveldens økt', createdAt: new Date().toISOString(), completedRounds: 0, roundBaselineId: null }], snapshots: [] };
+        return { version: 2, activeSessionId: id, sessions: [{ id, name: 'Today's session', createdAt: new Date().toISOString(), completedRounds: 0, roundBaselineId: null }], snapshots: [] };
       }
 
       function loadState() {
@@ -352,6 +358,7 @@
       function normalizeState(parsed) {
         parsed.version = 2;
         parsed.sessions.forEach(session => {
+          if (session.name === 'Kveldens økt') session.name = "Today's session";
           const snapshots = parsed.snapshots.filter(snapshot => snapshot.sessionId === session.id);
           if (snapshots.length && snapshots.some(snapshot => !snapshot.kind)) {
             snapshots.forEach((snapshot, index) => {
@@ -384,8 +391,8 @@
           return `<section class="class-card">
             <div class="class-title"><strong>${role.name}</strong><span id="gain-${role.id}">—</span></div>
             <div class="fields">
-              <div class="field"><label for="level-${role.id}">Nivå</label><input id="level-${role.id}" inputmode="numeric" value="${safeValue(v.level)}" placeholder="0"></div>
-              <div class="field"><label for="current-${role.id}">Nå XP</label><input id="current-${role.id}" inputmode="numeric" value="${safeValue(v.current)}" placeholder="0"></div>
+              <div class="field"><label for="level-${role.id}">Level</label><input id="level-${role.id}" inputmode="numeric" value="${safeValue(v.level)}" placeholder="0"></div>
+              <div class="field"><label for="current-${role.id}">Current XP</label><input id="current-${role.id}" inputmode="numeric" value="${safeValue(v.current)}" placeholder="0"></div>
             </div>
           </section>`;
         }).join('');
@@ -423,7 +430,7 @@
       function calculateDelta(previous, next) {
         if (!previous || previous.current == null || next.current == null) return { value: null, warning: '' };
         if (next.current >= previous.current) return { value: next.current - previous.current, warning: '' };
-        return { value: null, warning: 'Nå XP kan ikke gå ned; kontroller avlesningen.' };
+        return { value: null, warning: 'Current XP kan ikke gå ned; kontroller avlesningen.' };
       }
 
       function snapshotDeltas(snapshot, previous) {
@@ -436,8 +443,8 @@
         ROLES.forEach(role => {
           const delta = calculateDelta(previous?.values?.[role.id], values[role.id]);
           const el = $(`#gain-${role.id}`);
-          if (!previous) el.textContent = 'Startverdi';
-          else if (delta.value == null) el.textContent = 'Kontroller';
+          if (!previous) el.textContent = 'Baseline';
+          else if (delta.value == null) el.textContent = 'Review';
           else el.textContent = `+${nf.format(delta.value)} XP`;
         });
       }
@@ -445,7 +452,7 @@
       function saveSnapshot() {
         const values = getFormValues();
         const filled = ROLES.filter(role => values[role.id].current != null);
-        if (!filled.length) return setNotice('Fyll inn minst én Nå XP-verdi før du lagrer.', 'error');
+        if (!filled.length) return setNotice('Fyll inn minst én Current XP-verdi før du lagrer.', 'error');
 
         const session = currentSession();
         const previous = roundBaseline();
@@ -462,7 +469,7 @@
         const deltas = snapshotDeltas(candidate, previous);
         const stepDeltas = snapshotDeltas(candidate, previousReading);
         const warnings = [...Object.values(deltas), ...Object.values(stepDeltas)].filter(d => d.warning).map(d => d.warning);
-        if (warnings.length) return setNotice('Nå XP kan ikke være lavere enn forrige avlesning. Kontroller tallene før du lagrer.', 'error');
+        if (warnings.length) return setNotice('Current XP kan ikke være lavere enn forrige avlesning. Review tallene før du lagrer.', 'error');
         candidate.gains = Object.fromEntries(ROLES.map(role => [role.id, deltas[role.id].value]));
         candidate.stepGains = Object.fromEntries(ROLES.map(role => [role.id, stepDeltas[role.id].value]));
         candidate.totalGain = previous ? Object.values(candidate.gains).reduce((sum, value) => sum + (value || 0), 0) : 0;
@@ -471,15 +478,15 @@
         if (!previous) session.roundBaselineId = candidate.id;
         persist();
         renderAll();
-        setNotice(previous ? `Siden forrige avlesning: +${nf.format(candidate.stepTotal)} XP. Runde ${candidate.roundNumber} totalt: +${nf.format(candidate.totalGain)} XP. Trykk Ny runde når du er ferdig.` : 'Startverdien er lagret. Runde 1 er nå i gang.', 'good');
+        setNotice(previous ? `Since last reading: +${nf.format(candidate.stepTotal)} XP. Round ${candidate.roundNumber} total: +${nf.format(candidate.totalGain)} XP. Select Next round when finished.` : 'Baselineen er lagret. Round 1 er nå i gang.', 'good');
       }
 
       function finishRound() {
         const session = currentSession();
         const baseline = roundBaseline();
-        if (!baseline) return setNotice('Lagre en startavlesning før du starter den første runden.', 'error');
+        if (!baseline) return setNotice('Save a baseline reading before starting your first round.', 'error');
         const reading = currentRoundReading();
-        if (!reading) return setNotice(`Lagre minst én ny avlesning i runde ${session.completedRounds + 1} før du går videre.`, 'error');
+        if (!reading) return setNotice(`Save at least one reading in round ${session.completedRounds + 1} before continuing.`, 'error');
         reading.kind = 'round';
         reading.finalized = true;
         session.completedRounds = reading.roundNumber;
@@ -487,7 +494,7 @@
         persist();
         renderFields(reading.values);
         renderAll();
-        setNotice(`Runde ${reading.roundNumber} ble avsluttet med +${nf.format(reading.totalGain)} XP. Runde ${reading.roundNumber + 1} starter på 0 XP.`, 'good');
+        setNotice(`Round ${reading.roundNumber} finished with +${nf.format(reading.totalGain)} XP. Round ${reading.roundNumber + 1} starts at 0 XP.`, 'good');
       }
 
       function renderAll() {
@@ -505,33 +512,33 @@
         const completedTotal = finished.reduce((sum, snapshot) => sum + (Number(snapshot.totalGain) || 0), 0);
         const currentTotal = Number(current?.totalGain) || 0;
         const roundNumber = (session?.completedRounds || 0) + 1;
-        els.currentRoundLabel.textContent = `Runde ${roundNumber} · live`;
+        els.currentRoundLabel.textContent = `Round ${roundNumber} · live`;
         els.currentGain.textContent = `${nf.format(currentTotal)} XP`;
         els.readingGain.textContent = `${nf.format(Number(current?.stepTotal) || 0)} XP`;
         els.sessionGain.textContent = `${nf.format(completedTotal + currentTotal)} XP`;
         els.roundCount.textContent = nf.format(finished.length);
-        if (!roundBaseline()) els.roundStatus.textContent = `Runde ${roundNumber} venter på startverdi`;
-        else if (current) els.roundStatus.textContent = `Runde ${roundNumber} pågår · ${nf.format(currentTotal)} XP siden start`;
-        else els.roundStatus.textContent = `Runde ${roundNumber} pågår · klar for neste avlesning`;
+        if (!roundBaseline()) els.roundStatus.textContent = `Round ${roundNumber} is waiting for a baseline`;
+        else if (current) els.roundStatus.textContent = `Round ${roundNumber} in progress · ${nf.format(currentTotal)} XP since baseline`;
+        else els.roundStatus.textContent = `Round ${roundNumber} in progress · ready for the next reading`;
       }
 
       function renderHistory() {
         const snapshots = [...state.snapshots].reverse();
-        els.historySubtitle.textContent = snapshots.length ? `${snapshots.length} avlesning${snapshots.length === 1 ? '' : 'er'} totalt · aktiv: ${currentSession()?.name || 'uten navn'}` : 'Ingen avlesninger lagret ennå';
+        els.historySubtitle.textContent = snapshots.length ? `${snapshots.length} reading${snapshots.length === 1 ? '' : 's'} total · active: ${currentSession()?.name || 'unnamed'}` : 'No readings saved yet';
         if (!snapshots.length) {
-          els.history.innerHTML = '<div class="empty">Den første lagringen oppretter en startverdi.</div>';
+          els.history.innerHTML = '<div class="empty">Your first saved reading creates the baseline.</div>';
           return;
         }
-        els.history.innerHTML = `<table><thead><tr><th>Tidspunkt</th><th>Økt</th><th>Runde</th>${ROLES.map(r => `<th>${r.name}</th>`).join('')}<th>Totalt</th><th></th></tr></thead><tbody>${snapshots.map(snapshot => {
+        els.history.innerHTML = `<table><thead><tr><th>Timestamp</th><th>Session</th><th>Round</th>${ROLES.map(r => `<th>${r.name}</th>`).join('')}<th>Total</th><th></th></tr></thead><tbody>${snapshots.map(snapshot => {
           const session = state.sessions.find(item => item.id === snapshot.sessionId);
           const baseline = snapshot.kind === 'baseline';
-          const roundLabel = baseline ? '<span class="baseline">Start</span>' : snapshot.kind === 'round' ? `<span class="round-done">Runde ${snapshot.roundNumber} · ferdig</span>` : `<span class="round-live">Runde ${snapshot.roundNumber} · avlesning</span>`;
-          return `<tr><td>${df.format(new Date(snapshot.createdAt))}</td><td>${session?.name || 'Ukjent økt'}</td><td>${roundLabel}</td>${ROLES.map(role => {
+          const roundLabel = baseline ? '<span class="baseline">Start</span>' : snapshot.kind === 'round' ? `<span class="round-done">Round ${snapshot.roundNumber} · completed</span>` : `<span class="round-live">Round ${snapshot.roundNumber} · reading</span>`;
+          return `<tr><td>${df.format(new Date(snapshot.createdAt))}</td><td>${session?.name || 'Unknown session'}</td><td>${roundLabel}</td>${ROLES.map(role => {
             const savedXp = snapshot.values?.[role.id]?.current;
             const gain = snapshot.gains?.[role.id];
-            const detail = baseline ? 'lagret startverdi' : gain == null ? 'ingen gevinst beregnet' : `+${nf.format(gain)} i runden`;
+            const detail = baseline ? 'saved baseline' : gain == null ? 'no gain calculated' : `+${nf.format(gain)} this round`;
             return `<td class="${savedXp != null ? 'saved-xp' : 'baseline'}">${savedXp == null ? '—' : nf.format(savedXp) + ' XP<small>' + detail + '</small>'}</td>`;
-          }).join('')}<td class="${baseline ? 'baseline' : 'gain'}">${baseline ? '—' : '+' + nf.format(snapshot.totalGain || 0) + ' XP<small>+' + nf.format(snapshot.stepTotal || 0) + ' siden sist</small>'}</td><td><button class="btn small" type="button" data-edit-id="${snapshot.id}">Korriger</button></td></tr>`;
+          }).join('')}<td class="${baseline ? 'baseline' : 'gain'}">${baseline ? '—' : '+' + nf.format(snapshot.totalGain || 0) + ' XP<small>+' + nf.format(snapshot.stepTotal || 0) + ' since last reading</small>'}</td><td><button class="btn small" type="button" data-edit-id="${snapshot.id}">Korriger</button></td></tr>`;
         }).join('')}</tbody></table>`;
       }
 
@@ -540,14 +547,14 @@
         if (!snapshot) return;
         const session = state.sessions.find(item => item.id === snapshot.sessionId);
         editingSnapshotId = snapshot.id;
-        els.editDescription.textContent = `${session?.name || 'Ukjent økt'} · ${df.format(new Date(snapshot.createdAt))}. Feltene under viser verdiene som ble lagret da. Senere avlesninger og rundesummer beregnes på nytt automatisk.`;
+        els.editDescription.textContent = `${session?.name || 'Unknown session'} · ${df.format(new Date(snapshot.createdAt))}. The fields below show the saved values. Later readings and round totals are recalculated automatically.`;
         els.editFields.innerHTML = ROLES.map(role => {
           const value = snapshot.values?.[role.id] || {};
           return `<section class="class-card">
             <div class="class-title"><strong>${role.name}</strong></div>
             <div class="fields">
-              <div class="field"><label for="edit-level-${role.id}">Nivå</label><input id="edit-level-${role.id}" inputmode="numeric" value="${safeValue(value.level)}" placeholder="0"></div>
-              <div class="field"><label for="edit-current-${role.id}">Nå XP</label><input id="edit-current-${role.id}" inputmode="numeric" value="${safeValue(value.current)}" placeholder="0"></div>
+              <div class="field"><label for="edit-level-${role.id}">Level</label><input id="edit-level-${role.id}" inputmode="numeric" value="${safeValue(value.level)}" placeholder="0"></div>
+              <div class="field"><label for="edit-current-${role.id}">Current XP</label><input id="edit-current-${role.id}" inputmode="numeric" value="${safeValue(value.current)}" placeholder="0"></div>
             </div>
           </section>`;
         }).join('');
@@ -569,12 +576,12 @@
             previousReading = snapshot;
             continue;
           }
-          if (!baseline) return { ok: false, message: 'Startavlesningen mangler for denne økten.' };
+          if (!baseline) return { ok: false, message: 'The baseline reading is missing for this session.' };
           const deltas = snapshotDeltas(snapshot, baseline);
           const stepDeltas = snapshotDeltas(snapshot, previousReading || baseline);
           const invalidRoles = ROLES.filter(role => deltas[role.id].warning || stepDeltas[role.id].warning);
           if (invalidRoles.length) {
-            return { ok: false, message: `Korrigeringen gjør at Nå XP går ned for ${invalidRoles.map(role => role.name).join(', ')}. Kontroller denne og de neste avlesningene.` };
+            return { ok: false, message: `This change causes Current XP to decrease for ${invalidRoles.map(role => role.name).join(', ')}. Review denne og de neste avlesningene.` };
           }
           snapshot.gains = Object.fromEntries(ROLES.map(role => [role.id, deltas[role.id].value]));
           snapshot.stepGains = Object.fromEntries(ROLES.map(role => [role.id, stepDeltas[role.id].value]));
@@ -597,7 +604,7 @@
           current: numberOrNull($(`#edit-current-${role.id}`).value)
         }]));
         if (!ROLES.some(role => values[role.id].current != null)) {
-          els.editNotice.textContent = 'Fyll inn minst én Nå XP-verdi.';
+          els.editNotice.textContent = 'Enter at least one Current XP value.';
           els.editNotice.className = 'notice error';
           return;
         }
@@ -628,7 +635,7 @@
         els.editDialog.close();
         if (snapshot.sessionId === state.activeSessionId) renderFields(sessionSnapshots().at(-1)?.values || emptyValues());
         renderAll();
-        setNotice('Avlesningen er korrigert, og senere XP-gevinster er beregnet på nytt.', 'good');
+        setNotice('Reading corrected; later XP gains have been recalculated.', 'good');
       }
 
       function newSession() {
@@ -636,30 +643,30 @@
         const go = () => {
           const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
           state.activeSessionId = id;
-          state.sessions.push({ id, name: `Økt ${state.sessions.length + 1}`, createdAt: new Date().toISOString(), completedRounds: 0, roundBaselineId: null });
+          state.sessions.push({ id, name: `Session ${state.sessions.length + 1}`, createdAt: new Date().toISOString(), completedRounds: 0, roundBaselineId: null });
           persist();
           renderFields();
           renderAll();
-          setNotice('Ny økt er startet. Første lagring blir startverdien.', 'good');
+          setNotice('New session er startet. Første lagring blir startverdien.', 'good');
         };
-        if (hasData) askConfirm('Start ny økt?', 'Historikken beholdes, men telleren og sammendraget starter på nytt.', go, false);
+        if (hasData) askConfirm('Start a new session?', 'Historyen beholdes, men telleren og sammendraget starter på nytt.', go, false);
         else go();
       }
 
       function clearAll() {
-        askConfirm('Slett all historikk?', 'Alle økter og avlesninger i denne nettleseren slettes. Last ned en sikkerhetskopi først hvis du vil kunne gjenopprette dataene.', () => {
+        askConfirm('Delete all history?', 'All sessions and readings in this browser will be deleted. Download a backup first if you might want to restore them.', () => {
           localStorage.removeItem(STORAGE_KEY);
           state = defaultState();
           renderFields();
           renderAll();
-          setNotice('All historikk er slettet.', 'good');
+          setNotice('All history has been deleted.', 'good');
         }, true);
       }
 
       function askConfirm(title, text, action, dangerous) {
         els.dialogTitle.textContent = title;
         els.dialogText.textContent = text;
-        els.dialogConfirm.textContent = dangerous ? 'Slett alt' : 'Start ny økt';
+        els.dialogConfirm.textContent = dangerous ? 'Delete all' : 'Start new session';
         els.dialogConfirm.className = dangerous ? 'btn danger' : 'btn primary';
         confirmAction = action;
         els.dialog.showModal();
@@ -671,7 +678,7 @@
       }
 
       function loadImageFile(file) {
-        if (!file || !file.type.startsWith('image/')) return setNotice('Filen må være et bilde.', 'error');
+        if (!file || !file.type.startsWith('image/')) return setNotice('Please select an image file.', 'error');
         const url = URL.createObjectURL(file);
         const img = new Image();
         img.onload = () => {
@@ -681,9 +688,9 @@
           els.dropzone.style.display = 'none';
           els.previewWrap.classList.add('visible');
           drawPreview();
-          setNotice('Bildet er klart. Juster utsnittet ved behov og velg Les av XP.', '');
+          setNotice('Image ready. Adjust the crop if needed, then select Read XP.', '');
         };
-        img.onerror = () => { URL.revokeObjectURL(url); setNotice('Bildet kunne ikke åpnes.', 'error'); };
+        img.onerror = () => { URL.revokeObjectURL(url); setNotice('Could not open the image.', 'error'); };
         img.src = url;
       }
 
@@ -721,8 +728,8 @@
         return crop || { x: 0, y: 0, w: image.naturalWidth, h: image.naturalHeight };
       }
 
-      // Lager svart tekst på hvit bakgrunn. Bare lyse, lite fargede piksler regnes som tekst,
-      // slik at de gule ringene og ikonbakgrunnen ikke forstyrrer avlesningen.
+      // Render black text on a white background. Only bright, low-saturation pixels count as text,
+      // so yellow rings and icon backgrounds do not interfere with OCR.
       function textMaskCanvas(rect, scale) {
         const canvas = document.createElement('canvas');
         canvas.width = Math.max(1, Math.round(rect.w * scale));
@@ -752,7 +759,7 @@
         return dp[a.length][b.length];
       }
 
-      // Finner klassenavnene, også når OCR-en har lest en bokstav eller to feil.
+      // Find class labels even when OCR misreads a letter or two.
       function findLabels(words, scale, rect) {
         const labels = {};
         for (const word of words) {
@@ -772,7 +779,7 @@
         return labels;
       }
 
-      // Reserveløsning: finner "Nå XP"-tallene (f.eks. "55,241 /") og regner ut hvor klassenavnene står.
+      // Fallback: locate Current XP values (e.g. "55,241 /") and infer label positions.
       function anchorsFromCurrentXp(words, scale, rect) {
         const list = words.map((word, i) => {
           const raw = String(word.text || '');
@@ -827,7 +834,7 @@
         return { colX, rowY, dx, dy };
       }
 
-      // Område under klassenavnet der nivå og "Nå XP" står (over maks-XP-linjen).
+      // Area below the class label containing level and Current XP (above the XP cap).
       function roleRect(layout, index, bounds) {
         const cx = layout.colX[index % 3];
         const ly = layout.rowY[Math.floor(index / 3)];
@@ -863,11 +870,11 @@
         if (!window.Tesseract) return setNotice('OCR-biblioteket kunne ikke lastes. Sjekk internettilkoblingen, eller skriv inn tallene manuelt.', 'error');
         els.read.disabled = true;
         els.progress.classList.add('visible');
-        setProgress(2, 'Klargjør tekstgjenkjenning…');
+        setProgress(2, 'Preparing text recognition…');
         let worker = null;
         try {
           let stage = 'init';
-          const statusText = { 'loading tesseract core': 'Laster OCR-motor…', 'initializing tesseract': 'Starter OCR…', 'loading language traineddata': 'Laster språkmodell…', 'initializing api': 'Forbereder avlesning…' };
+          const statusText = { 'loading tesseract core': 'Loading OCR engine…', 'initializing tesseract': 'Starting OCR…', 'loading language traineddata': 'Loading language model…', 'initializing api': 'Preparing reading…' };
           worker = await Tesseract.createWorker('eng', 1, {
             logger: message => {
               if (stage !== 'init') return;
@@ -875,9 +882,9 @@
             }
           });
 
-          // Steg 1: finn klassenavnene for å kartlegge oppsettet i bildet
+          // Step 1: locate class labels to map the layout.
           stage = 'labels';
-          setProgress(30, 'Finner klassene i bildet…');
+          setProgress(30, 'Locating classes in the image…');
           const rect = sourceRect();
           const scale = Math.min(3, Math.max(1.5, 1500 / rect.w));
           const overview = textMaskCanvas(rect, scale);
@@ -886,31 +893,31 @@
           const overviewWords = overviewResult.data.words || [];
           const labels = findLabels(overviewWords, scale, rect);
           let layout = buildLayout(labels);
-          let method = `klassenavn (${Object.keys(labels).length}/6)`;
+          let method = `class names (${Object.keys(labels).length}/6)`;
           if (!layout || Object.keys(labels).length < 4) {
             const anchors = { ...anchorsFromCurrentXp(overviewWords, scale, rect), ...labels };
             const alt = buildLayout(anchors);
-            if (alt) { layout = alt; method = `XP-tall og klassenavn (${Object.keys(anchors).length}/6)`; }
+            if (alt) { layout = alt; method = `XP values and class names (${Object.keys(anchors).length}/6)`; }
           }
-          if (!layout) method = 'faste posisjoner (fant ikke oppsettet)';
+          if (!layout) method = 'fixed positions (layout not detected)';
           console.info('[XP Tracker] oppsett funnet via', method, layout);
 
           let values;
           if (!layout) {
             values = parseOcrResult(overviewResult.data, overview.width, overview.height);
           } else {
-            // Steg 2: les nivå og Nå XP i hvert klasseområde med kun tall tillatt
+            // Step 2: recognize level and Current XP in each class region, allowing digits only.
             values = emptyValues();
             await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK, tessedit_char_whitelist: '0123456789,./' });
             for (let i = 0; i < ROLES.length; i++) {
               const role = ROLES[i];
-              setProgress(45 + i * 9, `Leser ${role.name}…`);
+              setProgress(45 + i * 9, `Reading ${role.name}…`);
               const area = roleRect(layout, i, rect);
               if (!area) continue;
               const result = await worker.recognize(textMaskCanvas(area, 3));
               const parsed = parseRoleText(result.data.text);
               if (parsed.current === '' || parsed.level === '') {
-                // Reserve: bruk tallene fra oversiktsavlesningen innenfor samme område
+                // Fallback: use numbers from the overview recognition within the same region.
                 const inside = overviewWords.map(word => ({ text: String(word.text || ''), box: word.bbox || {} }))
                   .map(w => ({ ...w, x: rect.x + (w.box.x0 + w.box.x1) / 2 / scale, y: rect.y + (w.box.y0 + w.box.y1) / 2 / scale }))
                   .filter(w => /\d/.test(w.text) && w.x >= area.x && w.x <= area.x + area.w && w.y >= area.y && w.y <= area.y + area.h)
@@ -925,12 +932,12 @@
           renderFields(values);
           const found = ROLES.filter(role => values[role.id].current !== '').length;
           els.progressBar.style.width = '100%';
-          els.progressText.textContent = `Ferdig – fant Nå XP for ${found} av 6 klasser · oppsett via ${method}.`;
-          setNotice(found ? `Fant ${found} av 6 XP-verdier. Kontroller alle tall mot bildet før du lagrer.` : 'Fant ingen sikre tall. Juster utsnittet eller skriv inn verdiene manuelt.', found === 6 ? 'good' : 'warn');
+          els.progressText.textContent = `Done – found Current XP for ${found} of 6 classes · layout via ${method}.`;
+          setNotice(found ? `Fant ${found} av 6 XP-verdier. Review alle tall mot bildet før du lagrer.` : 'No reliable values found. Adjust the crop or enter the numbers manually.', found === 6 ? 'good' : 'warn');
         } catch (error) {
           console.error(error);
-          setNotice('Avlesningen mislyktes. Prøv et strammere utsnitt, eller skriv inn tallene manuelt.', 'error');
-          els.progressText.textContent = 'Avlesningen mislyktes.';
+          setNotice('Reading failed. Try a tighter crop or enter the values manually.', 'error');
+          els.progressText.textContent = 'Reading failed.';
         } finally {
           if (worker) worker.terminate().catch(() => {});
           els.read.disabled = false;
@@ -968,10 +975,10 @@
       function csvEscape(value) { const s = String(value ?? ''); return /[";,\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }
 
       function exportCsv() {
-        const rows = [['Økt', 'Tidspunkt', 'Runde', 'Status', ...ROLES.flatMap(r => [`${r.name} nivå`, `${r.name} XP`, `${r.name} gevinst`]), 'Rundegevinst', 'Siden forrige avlesning']];
+        const rows = [['Session', 'Timestamp', 'Round', 'Status', ...ROLES.flatMap(r => [`${r.name} level`, `${r.name} XP`, `${r.name} gain`]), 'Roundgain', 'Since last reading']];
         state.sessions.forEach(session => {
           state.snapshots.filter(s => s.sessionId === session.id).forEach(snapshot => {
-            const status = snapshot.kind === 'baseline' ? 'Startverdi' : snapshot.kind === 'round' ? 'Ferdig' : 'Avlesning';
+            const status = snapshot.kind === 'baseline' ? 'Baseline' : snapshot.kind === 'round' ? 'Completed' : 'Reading';
             rows.push([session.name, snapshot.createdAt, snapshot.roundNumber || 'Start', status, ...ROLES.flatMap(role => {
               const value = snapshot.values[role.id] || {};
               return [value.level, value.current, snapshot.gains?.[role.id]];
@@ -994,13 +1001,13 @@
       async function importBackup(file) {
         try {
           const parsed = JSON.parse(await file.text());
-          if (!parsed || !Array.isArray(parsed.sessions) || !Array.isArray(parsed.snapshots)) throw new Error('Ugyldig format');
+          if (!parsed || !Array.isArray(parsed.sessions) || !Array.isArray(parsed.snapshots)) throw new Error('Invalid format');
           state = normalizeState(parsed);
           persist();
           renderFields(sessionSnapshots().at(-1)?.values || emptyValues());
           renderAll();
-          setNotice('Sikkerhetskopien er importert.', 'good');
-        } catch (_) { setNotice('Filen er ikke en gyldig sikkerhetskopi fra XP Tracker.', 'error'); }
+          setNotice('Backupen er importert.', 'good');
+        } catch (_) { setNotice('This file is not a valid XP Tracker backup.', 'error'); }
         els.import.value = '';
       }
 
@@ -1044,7 +1051,7 @@
         const button = event.target.closest('[data-edit-id]');
         if (button) openEditSnapshot(button.dataset.editId);
       });
-      els.sessionName.addEventListener('change', () => { const session = currentSession(); if (session) { session.name = els.sessionName.value.trim() || 'Uten navn'; persist(); renderHistory(); } });
+      els.sessionName.addEventListener('change', () => { const session = currentSession(); if (session) { session.name = els.sessionName.value.trim() || 'Unnamed'; persist(); renderHistory(); } });
       els.dialogCancel.addEventListener('click', () => { confirmAction = null; els.dialog.close(); });
       els.dialogConfirm.addEventListener('click', () => { const action = confirmAction; confirmAction = null; els.dialog.close(); if (action) action(); });
       els.editCancel.addEventListener('click', () => { editingSnapshotId = null; els.editDialog.close(); });
