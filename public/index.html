@@ -1017,7 +1017,17 @@
       ['dragenter', 'dragover'].forEach(type => els.dropzone.addEventListener(type, event => { event.preventDefault(); els.dropzone.classList.add('drag'); }));
       ['dragleave', 'drop'].forEach(type => els.dropzone.addEventListener(type, event => { event.preventDefault(); els.dropzone.classList.remove('drag'); }));
       els.dropzone.addEventListener('drop', event => loadImageFile(event.dataTransfer.files[0]));
-      document.addEventListener('paste', event => { const file = [...event.clipboardData.items].find(item => item.type.startsWith('image/'))?.getAsFile(); if (file) loadImageFile(file); });
+      document.addEventListener('paste', event => {
+        const items = Array.from(event.clipboardData?.items || []);
+        const imageItem = items.find(item => item.kind === 'file' && item.type.startsWith('image/'));
+        const file = imageItem?.getAsFile() || Array.from(event.clipboardData?.files || []).find(item => item.type.startsWith('image/'));
+        if (file) {
+          event.preventDefault();
+          loadImageFile(file);
+        } else if (!(event.target instanceof HTMLInputElement) && !(event.target instanceof HTMLTextAreaElement)) {
+          setNotice('No image found in the clipboard. Capture a screenshot with Win + Shift + S, then press Ctrl + V.', 'warn');
+        }
+      });
 
       els.canvas.addEventListener('pointerdown', event => { drawing = true; drawStart = pointerPosition(event); els.canvas.setPointerCapture(event.pointerId); });
       els.canvas.addEventListener('pointermove', event => {
