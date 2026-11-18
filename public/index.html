@@ -344,7 +344,7 @@
 
       function defaultState() {
         const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
-        return { version: 2, activeSessionId: id, sessions: [{ id, name: 'Today's session', createdAt: new Date().toISOString(), completedRounds: 0, roundBaselineId: null }], snapshots: [] };
+        return { version: 2, activeSessionId: id, sessions: [{ id, name: "Today's session", createdAt: new Date().toISOString(), completedRounds: 0, roundBaselineId: null }], snapshots: [] };
       }
 
       function loadState() {
