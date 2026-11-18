@@ -262,7 +262,7 @@
             <button id="saveButton" class="btn primary" type="button">Save reading</button>
             <button id="finishRoundButton" class="btn round" type="button">Next round</button>
           </div>
-          <p id="notice" class="notice" aria-live="polite">Første avlesning blir startverdien. Du kan deretter oppdatere flere ganger før du trykker Next round.</p>
+          <p id="notice" class="notice" aria-live="polite">Your first reading sets the baseline. You can save multiple readings before selecting Next round.</p>
         </div>
       </article>
     </section>
@@ -430,7 +430,7 @@
       function calculateDelta(previous, next) {
         if (!previous || previous.current == null || next.current == null) return { value: null, warning: '' };
         if (next.current >= previous.current) return { value: next.current - previous.current, warning: '' };
-        return { value: null, warning: 'Current XP kan ikke gå ned; kontroller avlesningen.' };
+        return { value: null, warning: 'Current XP cannot decrease; check the reading.' };
       }
 
       function snapshotDeltas(snapshot, previous) {
@@ -452,7 +452,7 @@
       function saveSnapshot() {
         const values = getFormValues();
         const filled = ROLES.filter(role => values[role.id].current != null);
-        if (!filled.length) return setNotice('Fyll inn minst én Current XP-verdi før du lagrer.', 'error');
+        if (!filled.length) return setNotice('Enter at least one Current XP value before saving.', 'error');
 
         const session = currentSession();
         const previous = roundBaseline();
@@ -469,7 +469,7 @@
         const deltas = snapshotDeltas(candidate, previous);
         const stepDeltas = snapshotDeltas(candidate, previousReading);
         const warnings = [...Object.values(deltas), ...Object.values(stepDeltas)].filter(d => d.warning).map(d => d.warning);
-        if (warnings.length) return setNotice('Current XP kan ikke være lavere enn forrige avlesning. Review tallene før du lagrer.', 'error');
+        if (warnings.length) return setNotice('Current XP cannot be lower than the previous reading. Verify the values before saving.', 'error');
         candidate.gains = Object.fromEntries(ROLES.map(role => [role.id, deltas[role.id].value]));
         candidate.stepGains = Object.fromEntries(ROLES.map(role => [role.id, stepDeltas[role.id].value]));
         candidate.totalGain = previous ? Object.values(candidate.gains).reduce((sum, value) => sum + (value || 0), 0) : 0;
@@ -478,7 +478,7 @@
         if (!previous) session.roundBaselineId = candidate.id;
         persist();
         renderAll();
-        setNotice(previous ? `Since last reading: +${nf.format(candidate.stepTotal)} XP. Round ${candidate.roundNumber} total: +${nf.format(candidate.totalGain)} XP. Select Next round when finished.` : 'Baselineen er lagret. Round 1 er nå i gang.', 'good');
+        setNotice(previous ? `Since last reading: +${nf.format(candidate.stepTotal)} XP. Round ${candidate.roundNumber} total: +${nf.format(candidate.totalGain)} XP. Select Next round when finished.` : 'Baseline saved. Round 1 is now in progress.', 'good');
       }
 
       function finishRound() {
@@ -647,9 +647,9 @@
           persist();
           renderFields();
           renderAll();
-          setNotice('New session er startet. Første lagring blir startverdien.', 'good');
+          setNotice('New session started. Your first save sets the baseline.', 'good');
         };
-        if (hasData) askConfirm('Start a new session?', 'Historyen beholdes, men telleren og sammendraget starter på nytt.', go, false);
+        if (hasData) askConfirm('Start a new session?', 'History is preserved, but the counters and summary reset.', go, false);
         else go();
       }
 
@@ -933,7 +933,7 @@
           const found = ROLES.filter(role => values[role.id].current !== '').length;
           els.progressBar.style.width = '100%';
           els.progressText.textContent = `Done – found Current XP for ${found} of 6 classes · layout via ${method}.`;
-          setNotice(found ? `Fant ${found} av 6 XP-verdier. Review alle tall mot bildet før du lagrer.` : 'No reliable values found. Adjust the crop or enter the numbers manually.', found === 6 ? 'good' : 'warn');
+          setNotice(found ? `Found ${found} of 6 XP values. Verify every value against the image before saving.` : 'No reliable values found. Adjust the crop or enter the numbers manually.', found === 6 ? 'good' : 'warn');
         } catch (error) {
           console.error(error);
           setNotice('Reading failed. Try a tighter crop or enter the values manually.', 'error');
