@@ -516,6 +516,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
 
   return {
     render(p) { last = p; render(p); },
+    scene,
     dispose() {
       resizer.disconnect();
       for (const item of disposables) item.dispose?.();
