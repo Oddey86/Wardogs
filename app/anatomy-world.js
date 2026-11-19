@@ -90,6 +90,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     target: new THREE.MeshStandardMaterial({ color: '#c9c3ad', metalness: 0.4, roughness: 0.55 }),
   };
   Object.values(mat).forEach(keep);
+  mat.ground.envMapIntensity = 0.08;
 
   // Outer shell materials fade out for the x-ray view.
   const shellMats = ['gunmetal', 'polymer'].map(name => {
