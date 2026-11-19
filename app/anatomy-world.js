@@ -86,11 +86,11 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     copper: new THREE.MeshStandardMaterial({ color: '#b86b3e', metalness: 1, roughness: 0.27 }),
     spring: new THREE.MeshStandardMaterial({ color: '#c7c9c2', metalness: 1, roughness: 0.32 }),
     accent: new THREE.MeshStandardMaterial({ color: '#eac46a', metalness: 0.6, roughness: 0.4 }),
-    ground: new THREE.MeshStandardMaterial({ color: '#050604', metalness: 0, roughness: 1 }),
+    // Lambert ignores the studio reflections, which would otherwise wash the floor out to grey.
+    ground: new THREE.MeshLambertMaterial({ color: '#1a1d16' }),
     target: new THREE.MeshStandardMaterial({ color: '#77725f', metalness: 0.5, roughness: 0.6 }),
   };
   Object.values(mat).forEach(keep);
-  mat.ground.envMapIntensity = 0.08;
 
   // Outer shell materials fade out for the x-ray view.
   const shellMats = ['gunmetal', 'polymer'].map(name => {
@@ -516,7 +516,6 @@ export function mountAnatomyScene(host, { mobile } = {}) {
 
   return {
     render(p) { last = p; render(p); },
-    scene,
     dispose() {
       resizer.disconnect();
       for (const item of disposables) item.dispose?.();
