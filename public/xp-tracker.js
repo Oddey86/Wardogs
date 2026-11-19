@@ -10,6 +10,7 @@
         { id: 'pilot', name: 'Pilot', x: .904, row: 1 }
       ];
       const STORAGE_KEY = 'battlefield-xp-tracker-v1';
+      const DRAFT_KEY = 'battlefield-xp-tracker-draft-v1';
       const nf = new Intl.NumberFormat('en-US');
       const df = new Intl.DateTimeFormat('en-US', { dateStyle: 'short', timeStyle: 'short' });
 
@@ -80,7 +81,36 @@
       }
 
       function persist() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (_) {
+          setNotice('Could not save in this browser (storage is blocked or full). Download a backup to keep your data.', 'error');
+        }
+      }
+
+      // Unsaved values in the form survive a reload or a closed browser.
+      function saveDraft() {
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({ sessionId: state.activeSessionId, values: getFormValues(), savedAt: new Date().toISOString() }));
+        } catch (_) {}
+      }
+
+      function clearDraft() {
+        try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+      }
+
+      function loadDraft() {
+        try {
+          const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
+          if (!draft || draft.sessionId !== state.activeSessionId || !draft.values) return null;
+          const last = sessionSnapshots().at(-1)?.values || {};
+          const differs = ROLES.some(role => {
+            const d = draft.values[role.id] || {}, l = last[role.id] || {};
+            return (d.level ?? null) !== (l.level ?? null) || (d.current ?? null) !== (l.current ?? null);
+          });
+          const hasValues = ROLES.some(role => draft.values[role.id]?.current != null || draft.values[role.id]?.level != null);
+          return differs && hasValues ? draft : null;
+        } catch (_) { return null; }
       }
 
       function renderFields(values = emptyValues()) {
@@ -94,7 +124,7 @@
             </div>
           </section>`;
         }).join('');
-        els.fields.querySelectorAll('input').forEach(input => input.addEventListener('input', updatePreviewGains));
+        els.fields.querySelectorAll('input').forEach(input => input.addEventListener('input', () => { updatePreviewGains(); saveDraft(); }));
         updatePreviewGains();
       }
 
@@ -175,6 +205,7 @@
         state.snapshots.push(candidate);
         if (!previous) session.roundBaselineId = candidate.id;
         persist();
+        clearDraft();
         renderAll();
         setNotice(previous ? `Since last reading: +${nf.format(candidate.stepTotal)} XP. Round ${candidate.roundNumber} total: +${nf.format(candidate.totalGain)} XP. Select Next round when finished.` : 'Baseline saved. Round 1 is now in progress.', 'good');
       }
@@ -190,6 +221,7 @@
         session.completedRounds = reading.roundNumber;
         session.roundBaselineId = reading.id;
         persist();
+        clearDraft();
         renderFields(reading.values);
         renderAll();
         setNotice(`Round ${reading.roundNumber} finished with +${nf.format(reading.totalGain)} XP. Round ${reading.roundNumber + 1} starts at 0 XP.`, 'good');
@@ -343,6 +375,7 @@
           state.activeSessionId = id;
           state.sessions.push({ id, name: `Session ${state.sessions.length + 1}`, createdAt: new Date().toISOString(), completedRounds: 0, roundBaselineId: null });
           persist();
+          clearDraft();
           renderFields();
           renderAll();
           setNotice('New session started. Your first save sets the baseline.', 'good');
@@ -354,6 +387,7 @@
       function clearAll() {
         askConfirm('Delete all history?', 'All sessions and readings in this browser will be deleted. Download a backup first if you might want to restore them.', () => {
           localStorage.removeItem(STORAGE_KEY);
+          clearDraft();
           state = defaultState();
           renderFields();
           renderAll();
@@ -628,6 +662,7 @@
             }
           }
           renderFields(values);
+          saveDraft();
           const found = ROLES.filter(role => values[role.id].current !== '').length;
           els.progressBar.style.width = '100%';
           els.progressText.textContent = `Done – found Current XP for ${found} of 6 classes · layout via ${method}.`;
@@ -702,6 +737,7 @@
           if (!parsed || !Array.isArray(parsed.sessions) || !Array.isArray(parsed.snapshots)) throw new Error('Invalid format');
           state = normalizeState(parsed);
           persist();
+          clearDraft();
           renderFields(sessionSnapshots().at(-1)?.values || emptyValues());
           renderAll();
           setNotice('Backup imported successfully.', 'good');
@@ -765,6 +801,14 @@
       els.editCancel.addEventListener('click', () => { editingSnapshotId = null; els.editDialog.close(); });
       els.editSave.addEventListener('click', saveEditedSnapshot);
 
-      renderFields(sessionSnapshots().at(-1)?.values || emptyValues());
+      // Ask the browser to keep this site's data instead of clearing it when space runs low.
+      try { navigator.storage?.persist?.().catch(() => {}); } catch (_) {}
+
+      // Store the starting state right away so the session id stays the same between visits.
+      try { if (!localStorage.getItem(STORAGE_KEY)) persist(); } catch (_) {}
+
+      const draft = loadDraft();
+      renderFields(draft?.values || sessionSnapshots().at(-1)?.values || emptyValues());
       renderAll();
+      if (draft) setNotice('Unsaved values from your last visit were restored. Verify them and select Save reading.', 'warn');
     })();
