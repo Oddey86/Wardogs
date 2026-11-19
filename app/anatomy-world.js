@@ -32,7 +32,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#0f120e');
-  scene.fog = new THREE.Fog('#0f120e', 14, 70);
+  scene.fog = new THREE.Fog('#0f120e', 12, 60);
   const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 160);
   const disposables = [];
   const keep = item => (disposables.push(item), item);
@@ -61,7 +61,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   pmrem.dispose();
   scene.environment = envMap;
 
-  scene.add(new THREE.HemisphereLight('#b9c7b4', '#1b1d16', 0.55));
+  scene.add(new THREE.HemisphereLight('#c9d4c2', '#1b1d16', 1.1));
   const key = new THREE.DirectionalLight('#ffe2b0', 2.4);
   key.position.set(4, 7, 6);
   key.castShadow = true;
@@ -69,21 +69,24 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   key.shadow.normalBias = 0.02;
   Object.assign(key.shadow.camera, { left: -8, right: 8, top: 7, bottom: -7, near: 1, far: 30 });
   scene.add(key, key.target);
-  const rim = new THREE.DirectionalLight('#9fb7ff', 1.3);
+  const fill = new THREE.DirectionalLight('#ffffff', 0.9);
+  fill.position.set(-2, 1, 8);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight('#9fb7ff', 1.6);
   rim.position.set(-6, 3, -5);
   scene.add(rim);
 
   // Materials
   const mat = {
-    gunmetal: new THREE.MeshStandardMaterial({ color: '#2b2e2b', metalness: 0.85, roughness: 0.42 }),
-    polymer: new THREE.MeshStandardMaterial({ color: '#3d4134', metalness: 0.05, roughness: 0.78 }),
+    gunmetal: new THREE.MeshStandardMaterial({ color: '#454a45', metalness: 0.8, roughness: 0.46 }),
+    polymer: new THREE.MeshStandardMaterial({ color: '#5a5e48', metalness: 0.05, roughness: 0.72 }),
     steel: new THREE.MeshStandardMaterial({ color: '#9aa09c', metalness: 1, roughness: 0.28 }),
     darkSteel: new THREE.MeshStandardMaterial({ color: '#4a4e4b', metalness: 0.95, roughness: 0.35 }),
     brass: new THREE.MeshStandardMaterial({ color: '#d0a54c', metalness: 1, roughness: 0.24 }),
     copper: new THREE.MeshStandardMaterial({ color: '#b86b3e', metalness: 1, roughness: 0.27 }),
     spring: new THREE.MeshStandardMaterial({ color: '#c7c9c2', metalness: 1, roughness: 0.32 }),
     accent: new THREE.MeshStandardMaterial({ color: '#eac46a', metalness: 0.6, roughness: 0.4 }),
-    ground: new THREE.MeshStandardMaterial({ color: '#171a14', metalness: 0, roughness: 0.95 }),
+    ground: new THREE.MeshStandardMaterial({ color: '#0c0e0a', metalness: 0, roughness: 1 }),
     target: new THREE.MeshStandardMaterial({ color: '#c9c3ad', metalness: 0.4, roughness: 0.55 }),
   };
   Object.values(mat).forEach(keep);
@@ -367,7 +370,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     magazine.position.y = magY - MAG_IN_Y;
 
     // X-ray: shell fades while the action is working
-    const xray = ease(seg(p, 0.26, 0.31)) * (1 - ease(seg(p, 0.6, 0.66)));
+    const xray = Math.max(0.75 * (1 - ease(seg(p, 0.13, 0.2))), ease(seg(p, 0.26, 0.31)) * (1 - ease(seg(p, 0.6, 0.66))));
     for (const m of shellMats) {
       m.opacity = 1 - 0.84 * xray;
       m.depthWrite = xray < 0.02;
