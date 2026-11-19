@@ -408,7 +408,7 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.clearRect(r.x, r.y, r.w, r.h);
         ctx.drawImage(image, tempCrop.x, tempCrop.y, tempCrop.w, tempCrop.h, r.x, r.y, r.w, r.h);
-        ctx.strokeStyle = '#f4cc62';
+        ctx.strokeStyle = '#eac46a';
         ctx.lineWidth = 2;
         ctx.setLineDash([8, 5]);
         ctx.strokeRect(r.x + 1, r.y + 1, Math.max(0, r.w - 2), Math.max(0, r.h - 2));
