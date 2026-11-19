@@ -1,7 +1,9 @@
 {
   "name": "wardogs",
   "compatibility_date": "2026-11-18",
+  "build": { "command": "npm run build" },
   "assets": {
-    "directory": "./public"
+    "directory": "./out",
+    "not_found_handling": "404-page"
   }
 }
