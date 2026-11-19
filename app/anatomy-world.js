@@ -508,7 +508,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     renderer.setSize(width, height);
     camera.aspect = width / height;
     // Keep the subject clear of the text panel: panel on the left on wide screens, at the bottom on narrow ones.
-    if (width >= 900) camera.setViewOffset(width, height, -Math.round(width * 0.17), 0, width, height);
+    if (width >= 900) camera.setViewOffset(width, height, -Math.round(Math.min(width * 0.26, 330)), 0, width, height);
     else camera.setViewOffset(width, height, 0, Math.round(height * 0.17), width, height);
     camera.updateProjectionMatrix();
     render(last);
