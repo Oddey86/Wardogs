@@ -377,3 +377,86 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 @media (prefers-reduced-motion: reduce) {
   .scroll-cue span { animation: none; }
 }
+
+.field-hero {
+  --accent: #ffae61;
+  --accent-hover: #ffc58c;
+  --page-gutter: max(6vw, (100% - 1340px) / 2);
+  background: #191c1a;
+  min-height: max(620px, calc(100svh - 64px));
+  color: #f5f3ea;
+}
+.field-art { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.field-hero::after { background: linear-gradient(90deg, #101414f2, #101414bf 27%, transparent 66%), linear-gradient(0deg,#111414b0,transparent 18%); }
+.field-hero h1 { font-family: Impact, "Arial Narrow", var(--font); font-size: clamp(6rem, 9.4vw, 10rem); font-weight: 400; line-height: .92; letter-spacing: -.012em; text-transform: uppercase; }
+.field-hero h1 em { font-style: normal; color: #f7b26c; }
+.field-hero p.eyebrow, .field-caption, .anatomy-hint { font-family: Consolas, monospace; }
+.field-hero p.eyebrow { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.7rem; color: #f1e8d4; }
+.field-hero .eyebrow::before { content: ''; width: 2rem; height: 3px; background: var(--accent); }
+.field-hero .actions a { border-radius: 2px; min-height: 48px; }
+.field-hero .secondary { background: #171b1bd9; border-color: #7e8076; }
+.play-icon { width: 0; height: 0; border-block: 5px solid transparent; border-left: 8px solid currentColor; }
+.field-caption { position: absolute; bottom: 2rem; right: var(--page-gutter); color: #fff8e9; text-align: right; font-size: .9rem; border-right: 2px solid var(--accent); padding-right: .8rem; }
+.field-caption span { display: block; color: #edd1ae; text-transform: uppercase; letter-spacing: .15em; font-size: .75rem; margin-bottom: .3rem; }
+.anatomy { --accent: #ffb573; --line: #65716b; background: #141918; }
+.anatomy .page-title { max-width: 9ch; text-transform: uppercase; font-family: Impact, "Arial Narrow", var(--font); font-weight: 400; letter-spacing: .005em; }
+.anatomy[data-mode="3d"] .anatomy-steps { border-left: 1px solid #69736b; }
+.anatomy[data-mode="3d"] .anatomy-steps li { border-radius: 0; }
+.anatomy[data-mode="3d"] .anatomy-steps li.active { background: linear-gradient(90deg,#383e36ed,#242925b8); border-color: transparent; border-left: 3px solid var(--accent); }
+.anatomy-progress { height: 2px; }
+@media (max-width: 899px) {
+  .anatomy .page-title { max-width: none; }
+}
+@media (max-width: 680px) {
+  .field-hero { min-height: max(630px,calc(100svh - 58px)); padding: 17rem 6vw 3rem; }
+  .field-hero h1 { font-size: clamp(4.5rem,18vw,6.4rem); }
+  .field-art { height: 66%; object-position: 75% center; }
+  .field-hero::after { background: linear-gradient(0deg,#151918 28%,#151918eb 38%,transparent 77%); }
+  .field-caption { display: none; }
+  .field-hero p { margin: 1.2rem 0; }
+}
+
+.shot-film {
+  position: relative;
+  isolation: isolate;
+  height: calc(100svh - 64px);
+  min-height: 350px;
+  overflow: hidden;
+  background: #1d2425 url('/shot-poster.webp') center / cover no-repeat;
+}
+.film-screen { position: absolute; inset: 0; opacity: 0; }
+.film-screen[data-ready="true"] { opacity: 1; }
+.film-screen canvas { display: block; width: 100%; height: 100%; }
+.film-title {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 3.5rem max(5vw, (100vw - 1440px)/2) clamp(1.5rem, 4vh, 3rem);
+  pointer-events: none;
+  background: linear-gradient(0deg, #0d1011dc, transparent);
+}
+.film-title .eyebrow { color: #ffbf78; font-family: Consolas, monospace; font-size: .8rem; }
+.film-title h1 { font: 400 clamp(2.5rem, 5.5vw, 6rem)/1 Impact, 'Arial Narrow', sans-serif; margin: .5rem 0 0; text-transform: uppercase; color: #f3f1e9; }
+.film-title h1 span { color: #ee9854; }
+
+.patrol {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: calc(100svh - 64px);
+  padding-inline: max(6vw, (100% - 1340px) / 2);
+  background: #53605e url('/air-patrol-valley.webp') 50% 47% / cover no-repeat;
+}
+.patrol::after { background: linear-gradient(90deg,#101817f2,#101817dc 24%,#10181745 61%,#1018170d),linear-gradient(0deg,#10181778,transparent 43%); }
+.patrol-aircraft { position: absolute; z-index: -2; top: 0; left: 0; width: 39%; transform: translate(72vw,45vh) translate(-50%,-50%); will-change: transform; pointer-events: none; }
+.patrol-aircraft img, .patrol-aircraft canvas { width: 100%; height: auto; display: block; }
+.patrol-aircraft canvas { position: absolute; inset: 0; visibility: hidden; }
+.patrol-aircraft[data-moving] canvas { visibility: visible; }
+.patrol-aircraft[data-moving] img { visibility: hidden; }
+@media (max-width: 680px) {
+  .patrol { min-height: calc(100svh - 58px); padding-block: clamp(11rem,36svh,25rem) 2.75rem; }
+  .patrol::after { background: linear-gradient(0deg,#101817fa 0%,#101817e8 30%,#1018178a 52%,#10181712 78%); }
+  .patrol-aircraft { width: 55%; transform: translate(60vw,24vh) translate(-50%,-50%); }
+}
+@media (max-width: 680px) {
+  .shot-film { height: calc(100svh - 58px); }
+  .film-title { padding: 3rem 1.2rem 2rem; }
+}

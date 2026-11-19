@@ -25,14 +25,14 @@ const ROUNDS = 5;
 export function mountAnatomyScene(host, { mobile } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.35;
+  renderer.toneMappingExposure = 1.12;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   host.append(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#0f120e');
-  scene.fog = new THREE.Fog('#0f120e', 12, 60);
+  scene.background = new THREE.Color('#374447');
+  scene.fog = new THREE.FogExp2('#374447', 0.032);
   const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 160);
   const disposables = [];
   const keep = item => (disposables.push(item), item);
@@ -57,9 +57,10 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     panel.scale.set(sx, sy, sz);
     envScene.add(panel);
   }
-  const envMap = keep(pmrem.fromScene(envScene, 0.035).texture);
+  const envMap = keep(pmrem.fromScene(envScene, 0.035));
   pmrem.dispose();
-  scene.environment = envMap;
+  scene.environment = envMap.texture;
+  scene.environmentIntensity = .68;
 
   scene.add(new THREE.HemisphereLight('#c9d4c2', '#1b1d16', 1.1));
   const key = new THREE.DirectionalLight('#ffe2b0', 2.4);
@@ -72,7 +73,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   const fill = new THREE.DirectionalLight('#ffffff', 0.9);
   fill.position.set(-2, 1, 8);
   scene.add(fill);
-  const rim = new THREE.DirectionalLight('#9fb7ff', 1.6);
+  const rim = new THREE.DirectionalLight('#ffbd78', 2.8);
   rim.position.set(-6, 3, -5);
   scene.add(rim);
 
@@ -92,6 +93,14 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   };
   Object.values(mat).forEach(keep);
 
+  // A shared finish tile breaks up the broad studio highlights at close range.
+  const patina = keep(finishTexture());
+  for (const material of [mat.gunmetal, mat.darkSteel, mat.polymer]) {
+    material.roughnessMap = patina;
+    material.bumpMap = patina;
+    material.bumpScale = 0.009;
+  }
+
   // Outer shell materials fade out for the x-ray view.
   const shellMats = ['gunmetal', 'polymer'].map(name => {
     const m = keep(mat[name].clone());
@@ -99,6 +108,21 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     return m;
   });
   const [shellMetal, shellPolymer] = shellMats;
+  const lacquer = keep(paintedFinish());
+  lacquer.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  shellMetal.color.set('#ffffff');
+  shellMetal.map = lacquer;
+  shellMetal.metalness = .32;
+  shellMetal.roughness = .72;
+  shellPolymer.color.set('#d9b285');
+  shellPolymer.map = lacquer;
+  const binding = keep(new THREE.MeshStandardMaterial({
+    color: '#302e27', roughness: .95, bumpMap: patina, bumpScale: .025, transparent: true,
+  }));
+  shellMats.push(binding);
+  const graphite = keep(new THREE.MeshStandardMaterial({ color: '#313c40', metalness: .74,
+    roughness: .44, roughnessMap: patina, transparent: true }));
+  shellMats.push(graphite);
 
   function mesh(geometry, material, parent = rifle, shadow = true) {
     keep(geometry);
@@ -153,17 +177,63 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     hg.position.set(3.9, BORE_Y, 0);
     const ventGeo = keep(new THREE.BoxGeometry(0.32, 0.07, 0.02));
     for (let i = 0; i < 7; i++) for (const side of [-1, 1]) {
-      const v = addShell(mesh(ventGeo, shellMetal, rifle, false));
+      const v = addShell(mesh(ventGeo, graphite, rifle, false));
       v.position.set(1.25 + i * 0.38, BORE_Y + 0.08, side * 0.345);
     }
   }
   // Stock and buffer tube
   addShell(extrude([[-3.3, 0.44], [-5.2, 0.44], [-5.26, -0.78], [-4.92, -0.8], [-3.45, -0.06], [-3.3, 0.06]], 0.42, shellPolymer));
   addShell(rodX(-3.45, -2.6, 0.17, 0.22, shellMetal));
+  // Overlapping canvas tape, with raised selvages and a loose end on the stock.
+  for (let i = 0; i < 5; i++) {
+    const band = addShell(boxAt(-5.04+i*.15, -4.86+i*.15, -.39+i*.055, .485, .49, binding));
+    band.rotation.z = -.13;
+  }
+  const tag = addShell(extrude([[-4.72,-.27],[-4.51,-.22],[-4.41,-.55],[-4.47,-.51],[-4.54,-.63]], .035, binding));
+  tag.position.z = .245;
+  // Layered moulded covers give the exterior its own silhouette and finish.
+  for (const side of [-1, 1]) {
+    const cheek = addShell(extrude([[-5.13,.44],[-4.91,.59],[-3.65,.56],[-3.43,.39],
+      [-3.65,.24],[-4.98,.26]], .09, graphite, { bevel: .035 }));
+    cheek.position.z = side * .224;
+    const trim = addShell(extrude([[-2.53,.39],[-2.34,.51],[.62,.51],[.82,.41],
+      [.59,.29],[-2.35,.26]], .07, graphite, { bevel: .025 }));
+    trim.position.z = side * .263;
+    const grip = addShell(extrude([[-1.54,-.51],[-1.26,-.51],[-1.37,-1.45],
+      [-1.65,-1.48],[-1.69,-1.41]], .065, binding, { bevel: .03 }));
+    grip.position.z = side * .23;
+    for (let i = 0; i < 5; i++) {
+      const pad = addShell(extrude([[0,-.09],[.11,-.16],[.38,-.16],[.46,-.07],
+        [.39,.01],[.09,.01]], .054, graphite, { bevel: .018 }));
+      pad.position.set(1.1+i*.54,.18,side*.356);
+    }
+  }
+  const marking = document.createElement('canvas');
+  marking.width = 768; marking.height = 128;
+  const ink = marking.getContext('2d');
+  ink.fillStyle = '#eee1bf'; ink.font = 'bold 76px monospace';
+  ink.fillText('WD / FIELD', 14, 89);
+  const stencil = keep(new THREE.CanvasTexture(marking));
+  stencil.colorSpace = THREE.SRGBColorSpace;
+  const print = keep(new THREE.MeshBasicMaterial({ map: stencil, transparent: true,
+    polygonOffset: true, polygonOffsetFactor: -1, depthWrite: false }));
+  const decal = mesh(new THREE.PlaneGeometry(1.13,.19), print, rifle, false);
+  decal.position.set(-1.57,.384,.326);
+  decal.renderOrder = 3;
+  shellMats.push(print);
+  // Project the printed finish in model space so adjacent painted panels match.
+  function paintUV(mesh) {
+    const { position, uv } = mesh.geometry.attributes;
+    for (let i = 0; i < position.count; i++) {
+      uv.setXY(i, (position.getX(i) + mesh.position.x + .31 * position.getZ(i)) / 4,
+        (position.getY(i) + mesh.position.y + .42 * position.getZ(i)) / 2);
+    }
+  }
+  shell.filter(part => part.material.map === lacquer).forEach(paintUV);
   boxAt(-5.3, -5.18, -0.8, 0.46, 0.44, mat.darkSteel); // butt pad
   // Barrel and muzzle device
-  addShell(rodX(0.9, 5.2, 0.085, BORE_Y, shellMetal));
-  addShell(rodX(5.2, MUZZLE_X, 0.13, BORE_Y, shellMetal));
+  addShell(rodX(0.9, 5.2, 0.085, BORE_Y, graphite));
+  addShell(rodX(5.2, MUZZLE_X, 0.13, BORE_Y, graphite));
   for (let i = 0; i < 3; i++) for (const side of [-1, 1]) {
     const slot = mesh(keep(new THREE.BoxGeometry(0.07, 0.05, 0.03)), mat.darkSteel, rifle, false);
     slot.position.set(5.32 + i * 0.13, BORE_Y + 0.05, side * 0.125);
@@ -213,6 +283,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   rifle.add(magazine);
   const magBody = extrude([[-0.3, 0], [0.72, 0], [0.98, -2.0], [1.02, -2.0], [1.02, -2.13], [-0.1, -2.13], [-0.06, -2.0]], 0.36, shellMetal, { parent: magazine });
   addShell(magBody);
+  paintUV(magBody);
   const follower = boxAt(-0.2, 0.6, -0.05, 0, 0.26, mat.polymer, magazine);
   const springGeo = new THREE.TubeGeometry(new (class extends THREE.Curve {
     getPoint(t, target = new THREE.Vector3()) {
@@ -284,6 +355,25 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   ground.position.set(40, GROUND_Y, 0);
   ground.receiveShadow = true;
   scene.add(ground);
+
+  // Repeating concrete bays catch the sidelight behind the moving subject.
+  const concrete = keep(new THREE.MeshStandardMaterial({ color: '#293339', roughness: .89,
+    bumpMap: patina, bumpScale: .06 }));
+  const bay = keep(new THREE.BoxGeometry(7.92, 10, .7));
+  const rib = keep(new THREE.BoxGeometry(.25, 10.5, 1.1));
+  const strip = keep(new THREE.BoxGeometry(4.8, .075, .12));
+  const lamp = keep(new THREE.MeshBasicMaterial({ color: '#ffe5b5' }));
+  for (let x = -40; x <= 80; x += 8) {
+    for (const [geometry, material, dx, y, z] of [
+      [bay, concrete, 0, GROUND_Y + 5, -9],
+      [rib, concrete, -4, GROUND_Y + 5, -8.7],
+      [strip, lamp, 0, 3.7, -8.55],
+    ]) {
+      const piece = new THREE.Mesh(geometry, material);
+      piece.position.set(x + dx, y, z);
+      scene.add(piece);
+    }
+  }
   const postGeo = keep(new THREE.BoxGeometry(0.08, 3.4, 0.08));
   const capGeo = keep(new THREE.BoxGeometry(0.14, 0.1, 0.14));
   for (let x = 10; x < TARGET_X; x += 6) for (const z of [-1.6, 1.6]) {
@@ -365,7 +455,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   }
 
   let width = 1, height = 1;
-  function render(p) {
+  function render(p, portrait = 0, orbit = 0) {
     p = clamp(p);
     const magY = lerp(MAG_OUT_Y, MAG_IN_Y, ease(seg(p, 0.14, 0.25)));
     magazine.position.y = magY - MAG_IN_Y;
@@ -490,9 +580,15 @@ export function mountAnatomyScene(host, { mobile } = {}) {
       camPos.lerp(v3.set(TARGET_X - 6.5, 1.3, 3.6), end);
       camTarget.lerp(v3.set(TARGET_X, 0.1, 0), end);
     }
+    if (portrait > 0) {
+      const distance = Math.max(9.8, 22.3 / camera.aspect);
+      const angle = .24 + orbit * .24;
+      camPos.lerp(v3.set(distance * Math.sin(angle), 1.3 + distance * .13, distance * Math.cos(angle)), portrait);
+      camTarget.lerp(v3.set(.18, -.7, 0), portrait);
+    }
     // Narrow or portrait screens: pull the camera back so the subject still fits.
     const k = clamp(1.65 / (width / height), 1, 2.3) * (mobile ? 1.1 : 1);
-    if (k > 1) camPos.sub(camTarget).multiplyScalar(k).add(camTarget);
+    if (k > 1) camPos.sub(camTarget).multiplyScalar(lerp(k, 1, portrait)).add(camTarget);
     camera.position.copy(camPos);
     camera.lookAt(camTarget);
     key.position.set(camTarget.x + 4, 7, 6);
@@ -501,24 +597,34 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   }
 
   let last = 0;
+  function renderFilm(time) {
+    last = time;
+    if (time < .23) {
+      const reveal = ease(seg(time, .13, .23));
+      render(.25 * (1 - reveal), 1 - reveal, time / .23);
+    } else if (time < .87) {
+      render(seg(time, .23, .87));
+    } else {
+      // Return from the distant scene to an exterior packshot.
+      render(.25, 1, 1 - ease(seg(time, .87, 1)));
+    }
+  }
   function resize() {
     width = host.clientWidth || 1;
     height = host.clientHeight || 1;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, width < 700 ? 1.25 : 1.75));
     renderer.setSize(width, height);
     camera.aspect = width / height;
-    // Keep the subject clear of the text panel: panel on the left on wide screens, at the bottom on narrow ones.
-    if (width >= 900) camera.setViewOffset(width, height, -Math.round(Math.min(width * 0.26, 330)), 0, width, height);
-    else camera.setViewOffset(width, height, 0, Math.round(height * 0.17), width, height);
+    camera.setViewOffset(width, height, 0, Math.round(height * .06), width, height);
     camera.updateProjectionMatrix();
-    render(last);
+    renderFilm(last);
   }
   const resizer = new ResizeObserver(resize);
   resizer.observe(host);
   resize();
 
   return {
-    render(p) { last = p; render(p); },
+    renderFilm,
     dispose() {
       resizer.disconnect();
       for (const item of disposables) item.dispose?.();
@@ -527,6 +633,72 @@ export function mountAnatomyScene(host, { mobile } = {}) {
       renderer.domElement.remove();
     },
   };
+}
+
+function paintedFinish() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  let seed = 87;
+  const sample = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  ctx.fillStyle = '#b3a48b';
+  ctx.fillRect(0, 0, 1024, 512);
+  for (let i = 0; i < 50; i++) {
+    const x = sample() * 1240 - 120, y = sample() * 700 - 100;
+    const w = 40 + sample() * 170, h = 12 + sample() * 70;
+    ctx.fillStyle = ['#555c50', '#434742', '#929587', '#d2bf99'][i % 4];
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x+w*.6, y-h*.35);
+    ctx.lineTo(x+w, y-h);
+    ctx.lineTo(x+w*.7, y+h*.3);
+    ctx.lineTo(x-w*.3, y+h);
+    ctx.fill();
+  }
+  for (const x of [105,141]) {
+    ctx.fillStyle = '#d17939';
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x+19,0);
+    ctx.lineTo(x+175,512); ctx.lineTo(x+156,512); ctx.fill();
+  }
+  for (let i = 0; i < 29000; i++) {
+    ctx.fillStyle = i % 3 ? 'rgba(41,38,32,.19)' : 'rgba(228,223,205,.48)';
+    ctx.fillRect(sample()*1024,sample()*512,1+sample()**5*11,1+sample()**4*3);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  return texture;
+}
+
+function finishTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  const pixels = ctx.createImageData(256, 256);
+  let seed = 313;
+  function sample() {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  }
+  for (let i = 0; i < pixels.data.length; i += 4) {
+    const tone = 132 + sample() * 104;
+    pixels.data.set([tone, tone, tone, 255], i);
+  }
+  ctx.putImageData(pixels, 0, 0);
+  ctx.strokeStyle = 'rgba(40,40,40,.38)';
+  ctx.lineWidth = .65;
+  for (let i = 0; i < 70; i++) {
+    const x = sample() * 256, y = sample() * 256;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 2 + sample() * 16, y + sample() * 4);
+    ctx.stroke();
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(2, 2);
+  return texture;
 }
 
 function radialTexture(stops) {
