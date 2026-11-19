@@ -18,13 +18,14 @@ const CARRIER_TRAVEL = 1.3;
 const MUZZLE_X = 5.75;
 const TARGET_X = 46;
 const MAG_IN_Y = 0.05;
-const MAG_OUT_Y = -3.4;
+const MAG_OUT_Y = -1.75;
+const GROUND_Y = -4.6;
 const ROUNDS = 5;
 
 export function mountAnatomyScene(host, { mobile } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.35;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   host.append(renderer.domElement);
@@ -66,7 +67,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
   key.shadow.normalBias = 0.02;
-  Object.assign(key.shadow.camera, { left: -7, right: 7, top: 5, bottom: -5, near: 1, far: 25 });
+  Object.assign(key.shadow.camera, { left: -8, right: 8, top: 7, bottom: -7, near: 1, far: 30 });
   scene.add(key, key.target);
   const rim = new THREE.DirectionalLight('#9fb7ff', 1.3);
   rim.position.set(-6, 3, -5);
@@ -276,16 +277,16 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   // Range: ground, distance markers, steel target
   const ground = new THREE.Mesh(keep(new THREE.PlaneGeometry(220, 60)), mat.ground);
   ground.rotation.x = -Math.PI / 2;
-  ground.position.set(40, -2.35, 0);
+  ground.position.set(40, GROUND_Y, 0);
   ground.receiveShadow = true;
   scene.add(ground);
-  const postGeo = keep(new THREE.BoxGeometry(0.08, 1.2, 0.08));
+  const postGeo = keep(new THREE.BoxGeometry(0.08, 3.4, 0.08));
   const capGeo = keep(new THREE.BoxGeometry(0.14, 0.1, 0.14));
   for (let x = 10; x < TARGET_X; x += 6) for (const z of [-1.6, 1.6]) {
     const post = new THREE.Mesh(postGeo, mat.darkSteel);
-    post.position.set(x, -1.75, z);
+    post.position.set(x, GROUND_Y + 1.7, z);
     const cap = new THREE.Mesh(capGeo, mat.accent);
-    cap.position.set(x, -1.12, z);
+    cap.position.set(x, GROUND_Y + 3.45, z);
     scene.add(post, cap);
   }
   const targetGroup = new THREE.Group();
@@ -302,10 +303,10 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   const ring = new THREE.Mesh(ringGeo, mat.accent);
   ring.position.set(-0.035, -0.85, 0);
   plate.add(ring);
-  const legGeo = keep(new THREE.BoxGeometry(0.1, 3.55, 0.1));
+  const legGeo = keep(new THREE.BoxGeometry(0.1, 1.15 - GROUND_Y, 0.1));
   for (const z of [-0.95, 0.95]) {
     const leg = new THREE.Mesh(legGeo, mat.darkSteel);
-    leg.position.set(TARGET_X, -0.6, z);
+    leg.position.set(TARGET_X, (1.15 + GROUND_Y) / 2, z);
     leg.castShadow = true;
     scene.add(leg);
   }
@@ -331,8 +332,9 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   const camPos = new THREE.Vector3();
   const camTarget = new THREE.Vector3();
   const keyframes = [
-    [0.0, [1.2, 1.1, 4.6], [0.35, -0.45, 0]],
-    [0.11, [0.9, 0.2, 5.0], [0.3, -0.65, 0]],
+    [0.0, [1.4, 0.2, 4.4], [0.35, -2.0, 0]],
+    [0.11, [1.0, -0.6, 4.6], [0.3, -2.3, 0]],
+    [0.17, [0.9, -0.3, 5.2], [0.3, -1.6, 0]],
     [0.24, [-0.1, 0.5, 6.2], [0.0, -0.3, 0]],
     [0.31, [-0.7, 1.0, 5.6], [-0.45, 0.05, 0]],
     [0.44, [-0.4, 0.55, 4.8], [-0.35, 0.0, 0]],
@@ -484,10 +486,9 @@ export function mountAnatomyScene(host, { mobile } = {}) {
       camPos.lerp(v3.set(TARGET_X - 6.5, 1.3, 3.6), end);
       camTarget.lerp(v3.set(TARGET_X, 0.1, 0), end);
     }
-    if (mobile || width < 700) {
-      const k = width < height ? 1.75 : 1.3;
-      camPos.sub(camTarget).multiplyScalar(k).add(camTarget);
-    }
+    // Narrow or portrait screens: pull the camera back so the subject still fits.
+    const k = clamp(1.65 / (width / height), 1, 2.3) * (mobile ? 1.1 : 1);
+    if (k > 1) camPos.sub(camTarget).multiplyScalar(k).add(camTarget);
     camera.position.copy(camPos);
     camera.lookAt(camTarget);
     key.position.set(camTarget.x + 4, 7, 6);
