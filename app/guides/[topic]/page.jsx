@@ -16,16 +16,20 @@ export default async function GuidePage({ params }) {
   if (!guide) notFound();
 
   return (
-    <main className="guide-layout guide-article">
+    <main className="page guide-article">
       <a className="back" href="/guides/">← All guides</a>
-      <h1>{guide.title}</h1>
+      <header className="page-head">
+        <p className="eyebrow">Guide</p>
+        <h1 className="page-title">{guide.title}</h1>
+        <p className="page-lead">{guide.summary}</p>
+      </header>
       {guide.sections.map(([title, content]) => (
         <section key={title}>
           <h2>{title}</h2>
           <p>{content}</p>
         </section>
       ))}
-      <a className="primary" href="/xp-tracker/">Open XP Tracker <span aria-hidden="true">↗</span></a>
+      <a className="primary" href="/xp-tracker/">Open XP Tracker <span aria-hidden="true">→</span></a>
     </main>
   );
 }

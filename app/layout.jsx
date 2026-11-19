@@ -1,4 +1,5 @@
 import './site.css';
+import Nav from './nav';
 
 export const metadata = {
   title: { default: 'WardogsBuddy', template: '%s | WardogsBuddy' },
@@ -11,13 +12,13 @@ export default function RootLayout({ children }) {
       <body>
         <header className="site-header">
           <a className="wordmark" href="/">WARDOGS<span>BUDDY</span></a>
-          <nav aria-label="Main navigation">
-            <a href="/xp-tracker/">XP Tracker</a>
-            <a href="/guides/">Guides</a>
-          </nav>
+          <Nav />
         </header>
         {children}
-        <footer className="site-footer">WardogsBuddy · Unofficial WARDOGS companion</footer>
+        <footer className="site-footer">
+          <span><strong>WardogsBuddy</strong> · Unofficial WARDOGS companion</span>
+          <span>Not affiliated with the WARDOGS developers.</span>
+        </footer>
       </body>
     </html>
   );
