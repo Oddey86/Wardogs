@@ -86,8 +86,8 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     copper: new THREE.MeshStandardMaterial({ color: '#b86b3e', metalness: 1, roughness: 0.27 }),
     spring: new THREE.MeshStandardMaterial({ color: '#c7c9c2', metalness: 1, roughness: 0.32 }),
     accent: new THREE.MeshStandardMaterial({ color: '#eac46a', metalness: 0.6, roughness: 0.4 }),
-    ground: new THREE.MeshStandardMaterial({ color: '#0c0e0a', metalness: 0, roughness: 1 }),
-    target: new THREE.MeshStandardMaterial({ color: '#c9c3ad', metalness: 0.4, roughness: 0.55 }),
+    ground: new THREE.MeshStandardMaterial({ color: '#050604', metalness: 0, roughness: 1 }),
+    target: new THREE.MeshStandardMaterial({ color: '#77725f', metalness: 0.5, roughness: 0.6 }),
   };
   Object.values(mat).forEach(keep);
   mat.ground.envMapIntensity = 0.08;
@@ -269,8 +269,8 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     rifle.add(s);
     smoke.push({ s, dx: 0.25 + i * 0.22, dy: Math.sin(i * 2.1) * 0.12, dz: Math.cos(i * 1.7) * 0.15, size: 0.5 + (i % 3) * 0.25 });
   }
-  const trailMat = keep(new THREE.MeshBasicMaterial({ color: '#ffe3a0', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-  const trailGeo = keep(new THREE.CylinderGeometry(0.004, 0.026, 1, 10, 1, true));
+  const trailMat = keep(new THREE.MeshBasicMaterial({ color: '#e8b65a', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  const trailGeo = keep(new THREE.CylinderGeometry(0.002, 0.014, 1, 10, 1, true));
   trailGeo.rotateZ(Math.PI / 2);
   const trail = new THREE.Mesh(trailGeo, trailMat);
   scene.add(trail);
@@ -470,7 +470,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     trail.visible = p > 0.555 && p < 0.955 && trailLen > 0.05;
     trail.scale.set(trailLen, 1, 1);
     trail.position.set(bx + 0.35 - trailLen / 2, BORE_Y, 0);
-    trailMat.opacity = 0.45 * (1 - seg(p, 0.9, 0.95));
+    trailMat.opacity = 0.3 * (1 - seg(p, 0.9, 0.95));
 
     const hit = seg(p, 0.95, 1);
     plate.rotation.z = p > 0.95 ? -0.55 * Math.sin(hit * Math.PI * 1.6) * Math.exp(-hit * 1.2) : 0;
