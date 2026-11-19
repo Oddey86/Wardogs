@@ -804,6 +804,9 @@
       // Ask the browser to keep this site's data instead of clearing it when space runs low.
       try { navigator.storage?.persist?.().catch(() => {}); } catch (_) {}
 
+      // Store the starting state right away so the session id stays the same between visits.
+      try { if (!localStorage.getItem(STORAGE_KEY)) persist(); } catch (_) {}
+
       const draft = loadDraft();
       renderFields(draft?.values || sessionSnapshots().at(-1)?.values || emptyValues());
       renderAll();
