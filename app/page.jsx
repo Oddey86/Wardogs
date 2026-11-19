@@ -1,4 +1,5 @@
 import SupplyScene from './supply-scene';
+import AnatomySection from './anatomy-section';
 
 export default function HomePage() {
   return (
@@ -14,7 +15,9 @@ export default function HomePage() {
             <a className="secondary" href="/guides/">Browse guides</a>
           </div>
         </div>
+        <a className="scroll-cue" href="#anatomy">Anatomy of a shot <span aria-hidden="true">↓</span></a>
       </section>
+      <AnatomySection />
     </main>
   );
 }
