@@ -5,5 +5,7 @@
   "assets": {
     "directory": "./out",
     "not_found_handling": "404-page"
-  }
+  },
+  // Needed by `wrangler preview`, which Cloudflare runs for builds of non-main branches.
+  "previews": {}
 }
