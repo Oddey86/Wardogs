@@ -279,7 +279,7 @@ export function mountAnatomyScene(host, { mobile } = {}) {
   scene.add(spark);
 
   // Range: ground, distance markers, steel target
-  const ground = new THREE.Mesh(keep(new THREE.PlaneGeometry(220, 60)), mat.ground);
+  const ground = new THREE.Mesh(keep(new THREE.PlaneGeometry(400, 400)), mat.ground);
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(40, GROUND_Y, 0);
   ground.receiveShadow = true;
@@ -507,6 +507,9 @@ export function mountAnatomyScene(host, { mobile } = {}) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, width < 700 ? 1.25 : 1.75));
     renderer.setSize(width, height);
     camera.aspect = width / height;
+    // Keep the subject clear of the text panel: panel on the left on wide screens, at the bottom on narrow ones.
+    if (width >= 900) camera.setViewOffset(width, height, -Math.round(width * 0.17), 0, width, height);
+    else camera.setViewOffset(width, height, 0, Math.round(height * 0.17), width, height);
     camera.updateProjectionMatrix();
     render(last);
   }
