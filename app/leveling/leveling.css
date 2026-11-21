@@ -1,0 +1,64 @@
+.leveling { max-width: 1600px; margin-inline: auto; }
+.leveling h2 { font-size: clamp(1.35rem,2.8vw,1.8rem); margin: 3px 0 16px; letter-spacing: -.035em; }
+.level-hero { display: flex; align-items: stretch; justify-content: space-between; gap: 24px; padding: 38px 0 30px; border-bottom: 1px solid var(--line-strong); }
+.level-hero .page-title { max-width: 780px; line-height: 1.07; }
+.level-hero .page-title span { color: var(--accent); }
+.level-hero-stat { min-width: 230px; padding: 22px 26px; background: linear-gradient(130deg,#313321,#151912); border: 1px solid #636042; border-radius: 14px; display:flex; flex-direction:column; justify-content:center; }
+.level-hero-stat small,.level-hero-stat span { color:var(--muted); font-size:.76rem; }
+.level-hero-stat strong { font-size: 4.3rem; line-height:1.2; color:var(--accent); font-variant-numeric:tabular-nums; }
+.level-flags { display:flex; flex-wrap:wrap; gap:8px; margin-top:21px; }
+.level-flags span { font-size:.68rem; font-weight:800; letter-spacing:.12em; background:#d6b65b16; color:var(--accent); border:1px solid #6b603a; border-radius:4px; padding:7px 9px; }
+.level-notice { padding:14px 18px; margin:22px 0 38px; background:#28251a; border-left:3px solid var(--accent); color:#d6ceb9; border-radius:5px; line-height:1.6; font-size:.87rem; }
+.level-notice strong { color:var(--accent); margin-right:.5rem; }
+.level-section { margin:35px 0; }
+.level-section-heading { display:flex; justify-content:space-between; align-items:end; gap:16px; flex-wrap:wrap; }
+.level-muted { color:var(--muted); font-size:.82rem; line-height:1.5; }
+.level-role-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.level-role,.level-panel { background:linear-gradient(155deg,#1c2119,#12160f); border:1px solid var(--line); border-radius:12px; }
+.level-role { padding:18px; transition:border-color .2s; }
+.level-role.active,.level-unlock.selected { border-color:var(--accent); box-shadow:inset 0 0 0 1px #eac46a18; }
+.level-role-head { width:100%; display:flex; justify-content:space-between; align-items:center; background:none; border:0; padding:0 0 15px; text-align:left; color:var(--text); font-weight:800; font-size:1.05rem; cursor:pointer; }
+.level-role-head strong { color:var(--accent); font-size:.83rem; }
+.level-bar { height:5px; background:#353b30; border-radius:10px; overflow:hidden; }
+.level-bar span { display:block; height:100%; background:var(--accent); }
+.level-fields { display:grid; grid-template-columns: 1fr 1.4fr; gap:10px; margin:14px 0 8px; }
+.leveling label { display:flex; flex-direction:column; gap:7px; font-size:.74rem; font-weight:700; color:var(--muted); }
+.leveling input,.leveling select { min-width:0; width:100%; background:#0c0f0b; color:var(--text); border:1px solid #3d4736; border-radius:7px; padding:10px 9px; font:inherit; font-size:.88rem; }
+.leveling input:focus,.leveling select:focus { outline:2px solid var(--accent); outline-offset:1px; }
+.level-role>small { color:#858d78; font-size:.67rem; }
+.level-two-col { display:grid; grid-template-columns:1fr 1.35fr; gap:16px; align-items:start; }
+.level-panel { padding:24px; }
+.level-form-row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin:16px 0 24px; }
+.level-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:18px; }
+.level-metrics.three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.level-metrics>div { background:#0b0e0a; border:1px solid var(--line); border-radius:9px; padding:16px 12px; min-width:0; }
+.level-metrics small { display:block; font-size:.7rem; color:var(--muted); margin-bottom:8px; }
+.level-metrics strong { display:block; color:var(--accent); font-size:clamp(1rem,2vw,1.65rem); overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.level-status { font-size:.75rem; color:#f1b980; font-weight:750; }
+.level-status.verified { color:var(--good); }
+.level-actions { display:grid; gap:7px; }
+.level-action { display:grid; grid-template-columns:minmax(0,1fr) 108px 80px; gap:10px; align-items:center; border:1px solid var(--line); border-radius:8px; padding:9px 11px; opacity:.57; }
+.level-action.chosen { border-color:#bca052; opacity:1; background:#eac46a08; }
+.level-action>span { font-weight:700; font-size:.84rem; }
+.level-action small { display:block; margin-top:4px; color:var(--muted); font-size:.68rem; }
+.level-action label { font-size:.64rem; }
+.level-search { display:grid; grid-template-columns:1fr 180px; gap:12px; margin:10px 0 18px; }
+.level-unlocks { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+.level-unlock { cursor:pointer; background:#171c14; color:var(--text); border:1px solid var(--line); border-radius:9px; padding:15px; display:flex; justify-content:space-between; align-items:center; gap:10px; text-align:left; min-width:0; }
+.level-unlock:hover { border-color:#8e7b48; }
+.level-unlock strong,.level-unlock small,.level-unlock b { display:block; }
+.level-unlock strong { font-size:.87rem; }
+.level-unlock small { color:var(--muted); margin-top:6px; font-size:.69rem; }
+.level-unlock-right { text-align:right; flex-shrink:0; }
+.level-unlock-right b { color:var(--accent); font-size:.76rem; }
+.level-selected { margin-top:14px; background:#2d291b; border:1px solid #71613c; border-radius:10px; padding:20px; display:flex; justify-content:space-between; gap:20px; align-items:center; }
+.level-selected div:first-child { display:flex; flex-direction:column; gap:6px; }
+.level-selected small { font-size:.66rem; color:var(--accent); font-weight:800; }
+.level-selected span { color:var(--muted); font-size:.76rem; }
+.level-selected strong { color:var(--accent); }
+.level-sources { margin-top:48px; padding:24px; border-top:1px solid var(--line); background:#151912; border-radius:10px; }
+.level-sources h2 { font-size:1.1rem; }
+.level-sources p { color:var(--muted); line-height:1.6; font-size:.84rem; }
+.level-sources a { display:inline-block; color:var(--accent); margin:4px 20px 8px 0; font-size:.84rem; }
+@media(max-width:950px) { .level-role-grid,.level-unlocks { grid-template-columns:repeat(2,minmax(0,1fr)); } .level-two-col { grid-template-columns:1fr; } }
+@media(max-width:600px) { .level-hero { flex-direction:column; padding-top:12px; } .level-hero-stat { min-width:0; } .level-hero-stat strong { font-size:3.1rem; } .level-role-grid,.level-unlocks { grid-template-columns:1fr; } .level-search { grid-template-columns:1fr; } .level-panel { padding:17px; } .level-metrics.three { grid-template-columns:1fr 1fr; } .level-selected { align-items:start; flex-direction:column; } .level-section { margin:24px 0; } .level-action { grid-template-columns:minmax(0,1fr) 86px 67px; gap:5px; padding:8px; } }

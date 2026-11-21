@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 
 const links = [
+  { href: '/leveling/', label: 'Leveling' },
   { href: '/xp-tracker/', label: 'XP Tracker' },
   { href: '/guides/', label: 'Guides' },
 ];
