@@ -62,7 +62,7 @@ export default function Planner() {
   }
   const selectedWardogNeed = selected?.role === 'Wardog' ? Math.max(0, selected.level - wardog) : null;
 
-  return <main className="page leveling">
+  return <main className="page leveling"><div className="leveling-shell">
     <div className="level-hero">
       <div><p className="eyebrow">WARDOGSBUDDY / OPERATIONS INTEL</p><h1 className="page-title">Season 03 <span>Leveling Planner</span></h1>
         <p className="page-lead">Your next unlock, mapped out. Track six roles, calculate the XP gap, and model your own route to the target.</p>
@@ -109,5 +109,5 @@ export default function Planner() {
       {selected && <div className="level-selected"><div><small>SELECTED OBJECTIVE</small><strong>{selected.name}</strong><span>{selected.role} level {selected.level} · One reported Season 3 route; alternative routes may exist.</span></div><div>{selected.role === 'Wardog' ? <strong>{selectedWardogNeed} Wardog levels to go</strong> : <strong>{fmt(Math.max(0, threshold(selected.level).xp - levels[selected.role].xp))} XP to go {threshold(selected.level).exact ? '· verified threshold' : '· estimated threshold'}</strong>}</div></div>}
     </section>
     <section className="level-sources"><h2>Sources & limitations</h2><p>Season 03 changed progression, introduced shared unlock routes and adjusted several unlock requirements. This tool does not import proprietary game assets, third-party lists or an unpublished API. Validate purchases and unlock paths in-game.</p><a href={sources.official} target="_blank" rel="noopener noreferrer">Official Season 03 patch notes ↗</a><a href={sources.review} target="_blank" rel="noopener noreferrer">Independent Season 3 data review ↗</a><p className="level-muted">Reviewed November 21, 2026 · Local progress stays on your device. No live player API connection.</p></section>
-  </main>;
+  </div></main>;
 }

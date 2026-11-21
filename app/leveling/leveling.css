@@ -1,9 +1,22 @@
-.leveling { max-width: 1600px; margin-inline: auto; }
+/* Own the outer sizing independently of the shared .page gutter and body flex. */
+main.page.leveling {
+  display: block;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 32px clamp(16px, 3vw, 48px) 56px;
+}
+.leveling-shell { width: 100%; max-width: 1520px; min-width: 0; margin-inline: auto; }
+.leveling-shell > *, .level-two-col > *, .level-role-grid > *, .level-unlocks > * { min-width: 0; }
 .leveling h2 { font-size: clamp(1.35rem,2.8vw,1.8rem); margin: 3px 0 16px; letter-spacing: -.035em; }
 .level-hero { display: flex; align-items: stretch; justify-content: space-between; gap: 24px; padding: 38px 0 30px; border-bottom: 1px solid var(--line-strong); }
+.level-hero > div:first-child { min-width: 0; flex: 1 1 auto; }
 .level-hero .page-title { max-width: 780px; line-height: 1.07; }
 .level-hero .page-title span { color: var(--accent); }
-.level-hero-stat { min-width: 230px; padding: 22px 26px; background: linear-gradient(130deg,#313321,#151912); border: 1px solid #636042; border-radius: 14px; display:flex; flex-direction:column; justify-content:center; }
+.level-hero-stat { flex: 0 0 245px; min-width: 0; padding: 22px 26px; background: linear-gradient(130deg,#313321,#151912); border: 1px solid #636042; border-radius: 14px; display:flex; flex-direction:column; justify-content:center; }
 .level-hero-stat small,.level-hero-stat span { color:var(--muted); font-size:.76rem; }
 .level-hero-stat strong { font-size: 4.3rem; line-height:1.2; color:var(--accent); font-variant-numeric:tabular-nums; }
 .level-flags { display:flex; flex-wrap:wrap; gap:8px; margin-top:21px; }
@@ -13,7 +26,7 @@
 .level-section { margin:35px 0; }
 .level-section-heading { display:flex; justify-content:space-between; align-items:end; gap:16px; flex-wrap:wrap; }
 .level-muted { color:var(--muted); font-size:.82rem; line-height:1.5; }
-.level-role-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.level-role-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
 .level-role,.level-panel { background:linear-gradient(155deg,#1c2119,#12160f); border:1px solid var(--line); border-radius:12px; }
 .level-role { padding:18px; transition:border-color .2s; }
 .level-role.active,.level-unlock.selected { border-color:var(--accent); box-shadow:inset 0 0 0 1px #eac46a18; }
@@ -26,7 +39,7 @@
 .leveling input,.leveling select { min-width:0; width:100%; background:#0c0f0b; color:var(--text); border:1px solid #3d4736; border-radius:7px; padding:10px 9px; font:inherit; font-size:.88rem; }
 .leveling input:focus,.leveling select:focus { outline:2px solid var(--accent); outline-offset:1px; }
 .level-role>small { color:#858d78; font-size:.67rem; }
-.level-two-col { display:grid; grid-template-columns:1fr 1.35fr; gap:16px; align-items:start; }
+.level-two-col { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.35fr); gap:16px; align-items:start; }
 .level-panel { padding:24px; }
 .level-form-row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin:16px 0 24px; }
 .level-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:18px; }
@@ -60,5 +73,6 @@
 .level-sources h2 { font-size:1.1rem; }
 .level-sources p { color:var(--muted); line-height:1.6; font-size:.84rem; }
 .level-sources a { display:inline-block; color:var(--accent); margin:4px 20px 8px 0; font-size:.84rem; }
-@media(max-width:950px) { .level-role-grid,.level-unlocks { grid-template-columns:repeat(2,minmax(0,1fr)); } .level-two-col { grid-template-columns:1fr; } }
-@media(max-width:600px) { .level-hero { flex-direction:column; padding-top:12px; } .level-hero-stat { min-width:0; } .level-hero-stat strong { font-size:3.1rem; } .level-role-grid,.level-unlocks { grid-template-columns:1fr; } .level-search { grid-template-columns:1fr; } .level-panel { padding:17px; } .level-metrics.three { grid-template-columns:1fr 1fr; } .level-selected { align-items:start; flex-direction:column; } .level-section { margin:24px 0; } .level-action { grid-template-columns:minmax(0,1fr) 86px 67px; gap:5px; padding:8px; } }
+@media(max-width:1050px) { .level-role-grid,.level-unlocks { grid-template-columns:repeat(2,minmax(0,1fr)); } .level-two-col { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:700px) { .level-hero { flex-direction:column; padding-top:12px; } .level-hero-stat { flex-basis:auto; } .level-hero-stat strong { font-size:3.1rem; } .level-role-grid,.level-unlocks { grid-template-columns:minmax(0,1fr); } .level-search { grid-template-columns:minmax(0,1fr); } .level-panel { padding:17px; } .level-metrics.three { grid-template-columns:repeat(2,minmax(0,1fr)); } .level-selected { align-items:start; flex-direction:column; } .level-section { margin:24px 0; } .level-action { grid-template-columns:minmax(0,1fr) 86px 67px; gap:5px; padding:8px; } }
+@media(max-width:360px) { .level-fields,.level-form-row { grid-template-columns: minmax(0,1fr); } .level-action { grid-template-columns:minmax(0,1fr) 70px 58px; } .level-metrics.three { grid-template-columns:minmax(0,1fr); } }
